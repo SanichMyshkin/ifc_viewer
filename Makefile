@@ -1,4 +1,4 @@
-venv:
+shell:
 	poetry shell
 
 start:
