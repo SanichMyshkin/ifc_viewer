@@ -1,6 +1,0 @@
-streamlit
-ifcopenshell
-matplotlib
-plotly
-pandas
-xlsxwriter

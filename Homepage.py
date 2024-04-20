@@ -20,21 +20,17 @@ def change_project_name():
 
 
 def main():
-    uploaded = 'is_file_uploaded'
     st.set_page_config(
         layout="wide",
         page_title="IFC Stream",
     )
+    uploaded = 'is_file_uploaded'
     st.title("Web IFC Viewer")
-
     st.markdown(
         '''
         ### Загрузите файл и перейдите на страницу просмотра модели
         '''
     )
-
-    uploaded_file = st.file_uploader(
-        "", key="uploaded_file", on_change=callback_upload)
 
     css = '''
     <style>
@@ -46,9 +42,12 @@ def main():
     </style>
     '''
     st.markdown(css, unsafe_allow_html=True)
+    uploaded_file = st.file_uploader(
+        "", key="uploaded_file", on_change=callback_upload)
+
     if uploaded in st.session_state and st.session_state[uploaded]:
         st.success("File is loaded!")
-        col1, col2, = st.columns(2)
+        col1, col2 = st.columns(2)
         with col1:
             st.write(get_project_name())
         with col2:

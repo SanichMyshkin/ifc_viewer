@@ -1,3 +1,4 @@
+//import * as THREE from 'three';
 import { IFCLoader } from "./vendor/IFCLoader.js";
 import {
   AmbientLight,
@@ -5,220 +6,155 @@ import {
   DirectionalLight,
   GridHelper,
   PerspectiveCamera,
-  MeshLambertMaterial,
   Scene,
   Raycaster,
   Vector2,
   WebGLRenderer,
+  BoxGeometry,
+  MeshBasicMaterial,
+  Mesh,
 } from "./vendor/three.module.js";
 import { OrbitControls } from "./vendor/OrbitControls.js";
-
 import {
   acceleratedRaycast,
   computeBoundsTree,
   disposeBoundsTree
 } from './vendor/three-mesh-bvh/three-mesh-bvh.js';
-
-
-// The `Streamlit` object exists because our html file includes
-// `streamlit-component-lib.js`.
-// If you get an error about "Streamlit" not being defined, that
-// means you're missing that file.
+import { OBJLoader } from './vendor/OBJLoader.js'; // Импорт OBJLoader
 
 const ifcModels = [];
 const ifcLoader = new IFCLoader();
-const size = {
-  width: window.innerWidth,
-  height: window.innerHeight,
+const size = { width: window.innerWidth, height: window.innerHeight };
+const materialParams = {
+  transparent: true,
+  opacity: 0.6,
+  depthTest: false
 };
-const preselectMat = new MeshLambertMaterial({
-  transparent: true,
-  opacity: 0.6,
-  color: 0xf1a832,
-  depthTest: false
-})
-const selectMat = new MeshLambertMaterial({
-  transparent: true,
-  opacity: 0.6,
-  color: 0xc63f35,
-  depthTest: false
-})
+const preselectMat = new MeshBasicMaterial({ ...materialParams, color: 0xf1a832 });
+const selectMat = new MeshBasicMaterial({ ...materialParams, color: 0xc63f35 });
 
-function sendValue(value) {
-  Streamlit.setComponentValue(value)
-}
+const sendValue = value => Streamlit.setComponentValue(value);
 
-function setup(){
-  //BASIC THREE JS SCENE, CAMERA, LIGHTS, MOUSE CONTROLS
-    window.scene = new Scene();
-    const ifc = ifcLoader.ifcManager;
+const scene = new Scene();
 
-    //Creates the camera (point of view of the user)
-    const camera = new PerspectiveCamera(75, size.width / size.height);
-    camera.position.z = 15;
-    camera.position.y = 13;
-    camera.position.x = 8;
-  
-    //Creates the lights of the scene
-    const lightColor = 0xffffff;
-    const ambientLight = new AmbientLight(lightColor, 0.5);
-    window.scene.add(ambientLight);
-    const directionalLight = new DirectionalLight(lightColor, 1);
-    directionalLight.position.set(0, 10, 0);
-    directionalLight.target.position.set(-5, 0, 0);
-    window.scene.add(directionalLight);
-    window.scene.add(directionalLight.target);
-    window.scene.add(directionalLight.target);
-  
-    //Sets up the renderer, fetching the canvas of the HTML
-    const threeCanvas = document.getElementById("three-canvas");
-    const renderer = new WebGLRenderer({ canvas: threeCanvas, alpha: true });
+const setup = () => {
+  const ifc = ifcLoader.ifcManager;
+  const camera = new PerspectiveCamera(75, size.width / size.height);
+  camera.position.set(8, 13, 15);
+  camera.far = 10000; // Установка неограниченной дальности обзора камеры
+
+  const lightColor = 0xffffff;
+  const ambientLight = new AmbientLight(lightColor, 0.5);
+  const directionalLight = new DirectionalLight(lightColor, 1);
+  directionalLight.position.set(0, 10, 0);
+  directionalLight.target.position.set(-5, 0, 0);
+  scene.add(ambientLight, directionalLight, directionalLight.target);
+
+  const renderer = new WebGLRenderer({ canvas: document.getElementById("three-canvas"), alpha: true, antialias: true });
+  renderer.setSize(size.width, size.height);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+  const grid = new GridHelper(50, 30);
+  const axes = new AxesHelper();
+  axes.material.depthTest = false;
+  axes.renderOrder = 1;
+  scene.add(grid, axes);
+
+  const controls = new OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = true;
+  controls.target.set(-2, 0, 0);
+
+  const animate = () => {
+    controls.update();
+    renderer.render(scene, camera);
+    requestAnimationFrame(animate);
+  };
+  animate();
+
+  const adjustViewport = () => {
+    size.width = window.innerWidth;
+    size.height = window.innerHeight;
+    camera.aspect = size.width / size.height;
+    camera.updateProjectionMatrix();
     renderer.setSize(size.width, size.height);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-  
-    //Creates grids and axes in the window.scene
-    const grid = new GridHelper(50, 30);
-    window.scene.add(grid);
-    const axes = new AxesHelper();
-    axes.material.depthTest = false;
-    axes.renderOrder = 1;
-    window.scene.add(axes);
-  
-    //Creates the orbit controls (to navigate the scene)
-    const controls = new OrbitControls(camera, threeCanvas);
-    controls.enableDamping = true;
-    controls.target.set(-2, 0, 0);
-  
-    //Animation loop
-    const animate = () => {
-      controls.update();
-      renderer.render(window.scene, camera);
-      requestAnimationFrame(animate);
-    };
-  
-    animate();
-  
-    //Adjust the viewport to the size of the browser
-    window.addEventListener("resize", () => {
-      (size.width = window.innerWidth), (size.height = window.innerHeight);
-      camera.aspect = size.width / size.height;
-      camera.updateProjectionMatrix();
-      renderer.setSize(size.width, size.height);
-    });
-  
-    //Sets up the IFC loading
+  };
+  window.addEventListener("resize", adjustViewport);
 
-    ifc.setWasmPath("./vendor/IFC/");
+  ifc.setWasmPath("./vendor/IFC/");
+  ifc.setupThreeMeshBVH(computeBoundsTree, disposeBoundsTree, acceleratedRaycast);
 
-    ifc.setupThreeMeshBVH(
-      computeBoundsTree,
-      disposeBoundsTree,
-      acceleratedRaycast
-      );
-  
-    // SELECTOR EXAMPLE
-    const raycaster = new Raycaster();
-      raycaster.firstHitOnly = true;
-      const mouse = new Vector2();
-    
-      function getIntersection(event) {
-    
-        // Computes the position of the mouse on the screen
-        const bounds = threeCanvas.getBoundingClientRect();
-        const x1 = event.clientX - bounds.left;
-        const x2 = bounds.right - bounds.left;
-        mouse.x = (x1 / x2) * 2 - 1;
+  const raycaster = new Raycaster();
+  raycaster.firstHitOnly = true;
+  const mouse = new Vector2();
 
-        const y1 = event.clientY - bounds.top;
-        const y2 = bounds.bottom - bounds.top;
-        mouse.y = -(y1 / y2) * 2 + 1;
-    
-        // Places the raycaster on the camera, pointing to the mouse
-        raycaster.setFromCamera(mouse, camera);
-    
-        // Casts a ray
-        const found = raycaster.intersectObjects(ifcModels)
+  const getIntersection = (event) => {
+    const bounds = renderer.domElement.getBoundingClientRect();
+    mouse.x = ((event.clientX - bounds.left) / (bounds.right - bounds.left)) * 2 - 1;
+    mouse.y = -((event.clientY - bounds.top) / (bounds.bottom - bounds.top)) * 2 + 1;
+    raycaster.setFromCamera(mouse, camera);
+    const found = raycaster.intersectObjects(ifcModels);
+    if (found[0]) return { "id": ifc.getExpressId(found[0].object.geometry, found[0].faceIndex), "modelID": found[0].object.modelID };
+  };
 
-        // Gets Express ID
-        if (found[0]) { 
-          const index = found[0].faceIndex;
-          const geometry = found[0].object.geometry;
-          return {"id":ifc.getExpressId(geometry, index), "modelID": found[0].object.modelID}
-        }
-        ;
-    }
-    
-      function getObjectData(event) {
-        const intersection = getIntersection(event);
-        if (intersection){
-          const objectId = intersection.id;
-          const props = ifc.getItemProperties(intersection.modelID, objectId);
-          const propsets = ifc.getPropertySets(intersection.modelID, objectId,true);
-          let data = {
-            "id": objectId,
-            "props": propsets,
-          }
-          return JSON.stringify(data, null, 2)
-        }
-      }
-      
-    // HIGHLIGHT
-    // References to the previous selections
-      const highlightModel = { id: - 1};
-      const selectModel = { id: - 1};
-    function highlight(event, material, model) {
-    const intersection = getIntersection(event)
+  const getObjectData = (event) => {
+    const intersection = getIntersection(event);
     if (intersection) {
-        // Creates subset
-        ifc.createSubset({
-            modelID: intersection.modelID,
-            ids: [intersection.id],
-            material: material,
-            scene: window.scene,
-            removePrevious: true
-        })
-    } 
-    else {
-        // Remove previous highlight
-        ifc.removeSubset(model.id, window.scene, material);
+      const objectId = intersection.id;
+      const props = ifc.getItemProperties(intersection.modelID, objectId);
+      const propsets = ifc.getPropertySets(intersection.modelID, objectId, true);
+      return JSON.stringify({ "id": objectId, "props": propsets }, null, 2);
     }
+  };
+
+  const highlightModel = { id: -1 };
+  const selectModel = { id: -1 };
+
+  const highlight = (event, material, model) => {
+    const intersection = getIntersection(event);
+    if (intersection) ifc.createSubset({ modelID: intersection.modelID, ids: [intersection.id], material: material, scene: scene, removePrevious: true });
+    else ifc.removeSubset(model.id, scene, material);
+  };
+
+  window.onmousemove = (event) => highlight(event, preselectMat, highlightModel);
+  window.ondblclick = (event) => {
+    highlight(event, selectMat, selectModel);
+    sendValue(getObjectData(event));
+  };
+
+  // Загрузка модели города в формате OBJ
+  const objLoader = new OBJLoader();
+  objLoader.load(
+    './city.obj', // Путь к модели города в формате OBJ
+    (object) => {
+      scene.add(object);
+      // Перемещаем модель города, чтобы она находилась
+      // Перемещаем модель города, чтобы она находилась вокруг модели здания
+      object.position.set(0, 0, 0); // Настройте позицию по вашему усмотрению
+      object.scale.set(10, 10, 10); // Масштабируем размер модели по вашему усмотрению
+    },
+    undefined,
+    (error) => {
+      console.error('Ошибка загрузки модели:', error);
     }
-    
-    // Pre-Highlight Materials
-    window.onmousemove = (event) => highlight(event, preselectMat, highlightModel);
-      
-    // Highlight Selected Object and send Object data to Python
-      window.ondblclick = (event) => {
-        highlight(event, selectMat, selectModel);
-        let data = getObjectData(event);
-        sendValue(data)
-      }
-}
+  );
 
-async function sigmaLoader (url, ifcLoader){
-  const ifcModel = await ifcLoader.ifcManager.parse(url.buffer)
-  ifcModels.push(ifcModel.mesh)
-  window.scene.add(ifcModel.mesh)
-}
-    
-/**
- * The component's render function. This will be called immediately after
- * the component is initially loaded, and then again every time the
- * component gets new data from Python.
- */
+};
 
- async function loadURL(event) {
+const sigmaLoader = async (url) => {
+  const ifcModel = await ifcLoader.ifcManager.parse(url);
+  ifcModels.push(ifcModel.mesh);
+  scene.add(ifcModel.mesh);
+};
+
+const loadURL = async (event) => {
   if (!window.rendered) {
-    const {url} = event.detail.args;
-    await sigmaLoader(url, ifcLoader);
-    window.rendered = true
+    const { url } = event.detail.args;
+    await sigmaLoader(url);
+    window.rendered = true;
   }
-}
+};
 
-Streamlit.loadViewer(setup)
-// Render the component whenever python send a "render event"
-Streamlit.events.addEventListener(Streamlit.RENDER_EVENT, loadURL)
-// Tell Streamlit that the component is ready to receive events
-Streamlit.setComponentReady()
-// Render with the correct height, if this is a fixed-height component
-Streamlit.setFrameHeight(window.innerWidth/2)
+Streamlit.loadViewer(setup);
+Streamlit.events.addEventListener(Streamlit.RENDER_EVENT, loadURL);
+Streamlit.setComponentReady();
+Streamlit.setFrameHeight(window.innerWidth / 1.8);

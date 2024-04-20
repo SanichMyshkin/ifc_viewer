@@ -56,7 +56,6 @@ session = st.session_state
 
 
 def execute():
-    st.header("Отображениие Модели")
     if "ifc_file" in session and session["ifc_file"]:
         draw_3d_viewer()
         col1, col2 = st.columns(2)

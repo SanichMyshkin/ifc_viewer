@@ -1,9 +1,8 @@
 venv:
-	source .venv/bin/activate.fish
+	poetry shell
 
 start:
 	streamlit run Homepage.py
 
 install:
-	pip install --upgrade pip
-	pip install -r requirements.txt
+	poetry install --no-root
