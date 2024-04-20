@@ -161,3 +161,4 @@ cython_debug/
 .vscode/
 .venv/
 *.ifc
+.DS_Store
