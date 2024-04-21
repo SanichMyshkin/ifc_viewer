@@ -7,9 +7,9 @@ from typing import Optional
 import streamlit.components.v1 as components
 
 
-frontend_dir = (Path(__file__).parent / "frontend-viewer").absolute()
+models = (Path(__file__).parent / "models").absolute()
 _component_func = components.declare_component(
-    "ifc_js_viewer", path=str(frontend_dir)
+    "ifc_js_viewer", path=str(models)
 )
 
 

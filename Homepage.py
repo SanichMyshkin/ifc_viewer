@@ -1,5 +1,11 @@
 import streamlit as st
+from st_pages import Page, show_pages
 import ifcopenshell
+
+
+def set_page_configuration():
+    show_pages([Page("Homepage.py", "Главная")])
+    st.set_page_config(layout="wide")
 
 
 def callback_upload():
@@ -20,12 +26,8 @@ def change_project_name():
 
 
 def main():
-    st.set_page_config(
-        layout="wide",
-        page_title="IFC Stream",
-    )
+    set_page_configuration()
     uploaded = 'is_file_uploaded'
-    st.title("Web IFC Viewer")
     st.markdown(
         '''
         ### Загрузите файл и перейдите на страницу просмотра модели
@@ -47,6 +49,13 @@ def main():
 
     if uploaded in st.session_state and st.session_state[uploaded]:
         st.success("File is loaded!")
+        show_pages(
+    [
+        Page("Homepage.py", "Главная"),
+        Page("pages/Viewer.py", 'Отображение'),
+        Page("pages/Tree.py", "Древо модели"),
+    ]
+)
         col1, col2 = st.columns(2)
         with col1:
             st.write(get_project_name())

@@ -157,4 +157,4 @@ const loadURL = async (event) => {
 Streamlit.loadViewer(setup);
 Streamlit.events.addEventListener(Streamlit.RENDER_EVENT, loadURL);
 Streamlit.setComponentReady();
-Streamlit.setFrameHeight(window.innerWidth / 1.8);
+Streamlit.setFrameHeight(window.innerWidth / 1.5);
