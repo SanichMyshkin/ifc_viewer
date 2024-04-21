@@ -21,7 +21,7 @@ def main():
     uploaded = 'is_file_uploaded'
     st.markdown(
         '''
-        ### Web IFC-Viewer, приложение для виузализации и анализа ЦИМ
+        ### Web IFC-Viewer - приложение для виузализации и анализа ЦИМ
         '''
     )
 
@@ -41,7 +41,6 @@ def main():
     </footer>
     """
 
-    # Выводим HTML на Streamlit страницу
     st.markdown(footer_html, unsafe_allow_html=True)
     uploaded_file = st.file_uploader(
         "", key="uploaded_file", on_change=callback_upload)

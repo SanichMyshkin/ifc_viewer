@@ -2,7 +2,7 @@ shell:
 	poetry shell
 
 start:
-	streamlit run Homepage.py
+	streamlit run main.py
 
 install:
 	poetry install --no-root

@@ -83,9 +83,6 @@ def create_pandas_dataframe(data, pset_attributes):
 
 
 def format_ifcjs_psets(ifcJSON):
-    """
-    Organise pset data from web-ifc-api response
-    """
     dict = {}
     for pset in ifcJSON:
         if "Qto" in pset["Name"]["value"]:
@@ -95,7 +92,6 @@ def format_ifcjs_psets(ifcJSON):
                 for key in quantity.keys():
                     if "Value" in key:
                         quantity_value = quantity[key]["value"]
-                # quantity_value = quantity[5]["value"]
                 if pset["expressID"] not in dict:
                     dict[pset["expressID"]] = {
                         "Name": pset["Name"]["value"],

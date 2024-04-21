@@ -1,5 +1,5 @@
 import streamlit as st
-from tools import ifchelper
+from tools import ifcdataparse
 import json
 import ifcopenshell
 from pathlib import Path
@@ -34,7 +34,7 @@ def get_psets_from_ifc_js():
 
 
 def format_ifc_js_psets(data):
-    return ifchelper.format_ifcjs_psets(data)
+    return ifcdataparse.format_ifcjs_psets(data)
 
 
 def initialise_debug_props(force=False):
