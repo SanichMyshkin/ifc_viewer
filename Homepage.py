@@ -16,21 +16,12 @@ def callback_upload():
     )
 
 
-def get_project_name():
-    return st.session_state['ifc_file'].by_type('IfcProject')[0].Name
-
-
-def change_project_name():
-    st.session_state['ifc_file'].by_type(
-        'IfcProject')[0].Name = st.session_state['project_name_input']
-
-
 def main():
     set_page_configuration()
     uploaded = 'is_file_uploaded'
     st.markdown(
         '''
-        ### Загрузите файл и перейдите на страницу просмотра модели
+        ### Web IFC-Viewer, приложение для виузализации и анализа ЦИМ
         '''
     )
 
@@ -44,25 +35,26 @@ def main():
     </style>
     '''
     st.markdown(css, unsafe_allow_html=True)
+    footer_html = """
+    <footer style="position: fixed; bottom: 0; width: 100%; background-color: #f8f9fa; text-align: center; padding: 10px;">
+        <p style="margin: 0;">ИЦТМС 4-2 Мышкин Александр</p>
+    </footer>
+    """
+
+    # Выводим HTML на Streamlit страницу
+    st.markdown(footer_html, unsafe_allow_html=True)
     uploaded_file = st.file_uploader(
         "", key="uploaded_file", on_change=callback_upload)
 
     if uploaded in st.session_state and st.session_state[uploaded]:
-        st.success("File is loaded!")
+        st.success("Файл обратботан!\nМожете начинать работу :)")
         show_pages(
-    [
-        Page("Homepage.py", "Главная"),
-        Page("pages/Viewer.py", 'Отображение'),
-        Page("pages/Tree.py", "Древо модели"),
-    ]
-)
-        col1, col2 = st.columns(2)
-        with col1:
-            st.write(get_project_name())
-        with col2:
-            st.text_input("Edit name", key="project_name_input")
-            st.button('Apply', key='project_name_apply',
-                      on_click=change_project_name)
+            [
+                Page("Homepage.py", "Главная"),
+                Page("pages/Viewer.py", 'Отображение'),
+                Page("pages/Tree.py", "Древо модели"),
+            ]
+        )
 
 
 if __name__ == "__main__":
