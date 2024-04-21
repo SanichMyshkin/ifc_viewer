@@ -1,5 +1,4 @@
-//import * as THREE from 'three';
-import { IFCLoader } from "./vendor/IFCLoader.js";
+import { IFCLoader } from "./components/IFCLoader.js";
 import {
   AmbientLight,
   AxesHelper,
@@ -13,14 +12,14 @@ import {
   BoxGeometry,
   MeshBasicMaterial,
   Mesh,
-} from "./vendor/three.module.js";
-import { OrbitControls } from "./vendor/OrbitControls.js";
+} from "./components/three.module.js";
+import { OrbitControls } from "./components/OrbitControls.js";
 import {
   acceleratedRaycast,
   computeBoundsTree,
   disposeBoundsTree
-} from './vendor/three-mesh-bvh/three-mesh-bvh.js';
-import { OBJLoader } from './vendor/OBJLoader.js'; // Импорт OBJLoader
+} from './components/three-mesh-bvh/three-mesh-bvh.js';
+import { OBJLoader } from './components/OBJLoader.js'; // Импорт OBJLoader
 
 const ifcModels = [];
 const ifcLoader = new IFCLoader();
@@ -80,7 +79,7 @@ const setup = () => {
   };
   window.addEventListener("resize", adjustViewport);
 
-  ifc.setWasmPath("./vendor/IFC/");
+  ifc.setWasmPath("./components/IFC/");
   ifc.setupThreeMeshBVH(computeBoundsTree, disposeBoundsTree, acceleratedRaycast);
 
   const raycaster = new Raycaster();
@@ -121,13 +120,11 @@ const setup = () => {
     sendValue(getObjectData(event));
   };
 
-  // Загрузка модели города в формате OBJ
   const objLoader = new OBJLoader();
   objLoader.load(
     './city.obj', // Путь к модели города в формате OBJ
     (object) => {
       scene.add(object);
-      // Перемещаем модель города, чтобы она находилась
       // Перемещаем модель города, чтобы она находилась вокруг модели здания
       object.position.set(0, 0, 0); // Настройте позицию по вашему усмотрению
       object.scale.set(10, 10, 10); // Масштабируем размер модели по вашему усмотрению
