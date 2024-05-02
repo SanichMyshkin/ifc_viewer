@@ -50,10 +50,26 @@ def execute():
     if not st.session_state.IsDataFrameLoaded:
         load_data()
     if st.session_state.IsDataFrameLoaded:
-        st.write(st.session_state["DataFrame"])
-        if st.button("Сохранить *xlsx", key="download_excel"):
-            download_excel(
-                st.session_state["file_name"], st.session_state["DataFrame"])
+        dataframe = st.session_state["DataFrame"]
+        st.subheader("Общая таблица данных")
+        st.write(dataframe)
+
+        # Добавляем кнопку для загрузки общей таблицы
+        if st.button("Сохранить *xlsx для общей таблицы", key="download_excel_all"):
+            download_excel(st.session_state["file_name"], dataframe)
+
+        names_of_classes = dataframe['Class']
+        unique_names = names_of_classes.unique()
+
+        # Выводим таблицы для каждого уникального класса
+        for name in unique_names:
+            st.subheader(f"Данные класса: {name}")
+            class_dataframe = dataframe[dataframe['Class'] == name]
+            st.write(class_dataframe)
+
+            if st.button(f"Сохранить *xlsx для класса {name}", key=f"download_excel_{name}"):
+                download_excel(
+                    f"{name}_{st.session_state['file_name']}", class_dataframe)
     else:
         st.header("Загрузите модель для работы с данными")
 
