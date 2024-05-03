@@ -60,6 +60,7 @@ def execute():
         tab1 = st.columns(2)[0]
         with tab1:
             write_pset_data()
+
     else:
         st.header("Для начала загрузите саму модель на главной странице")
 

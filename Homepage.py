@@ -51,7 +51,7 @@ def main():
             [
                 Page("Homepage.py", "Главная"),
                 Page("pages/Viewer.py", 'Отображение'),
-                Page("pages/Tree.py", "Древо модели"),
+                Page("pages/Tree.py", "Данные модели"),
             ]
         )
 
