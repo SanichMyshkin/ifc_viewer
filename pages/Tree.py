@@ -91,19 +91,6 @@ def plot_doors_count(dataframe):
     st.pyplot(plt.gcf())
 
 
-def execute():
-    st.sidebar.title("Навигация")
-    app_mode = st.sidebar.radio(
-        "Выберите страницу", ["Таблица данных", "Площадь по этажам", "Статистика"])
-
-    if app_mode == "Таблица данных":
-        display_data_table()
-    elif app_mode == "Площадь по этажам":
-        display_area_by_level()
-    elif app_mode == "Статистика":
-        display_statistics()
-
-
 def display_data_table():
     st.header("Таблица данных")
     initialize_session_state()
@@ -149,6 +136,19 @@ def display_statistics():
         plot_doors_count(dataframe)
     else:
         st.header("Загрузите модель для работы с данными")
+
+
+def execute():
+    st.sidebar.title("Навигация")
+    app_mode = st.sidebar.radio(
+        "Выберите страницу", ["Таблица данных", "Площадь по этажам", "Статистика"])
+
+    if app_mode == "Таблица данных":
+        display_data_table()
+    elif app_mode == "Площадь по этажам":
+        display_area_by_level()
+    elif app_mode == "Статистика":
+        display_statistics()
 
 
 execute()
