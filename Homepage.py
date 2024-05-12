@@ -13,8 +13,7 @@ def set_page_configuration():
 def callback_upload():
     if "uploaded_file" in st.session_state and st.session_state["uploaded_file"] is not None:
         st.session_state["file_name"] = st.session_state["uploaded_file"].name
-        st.session_state["array_buffer"] = st.session_state["uploaded_file"].getvalue(
-        )
+        st.session_state["array_buffer"] = st.session_state["uploaded_file"].getvalue()
         st.session_state["ifc_file"] = ifcopenshell.file.from_string(
             st.session_state["array_buffer"].decode("utf-8"))
 
@@ -22,6 +21,7 @@ def callback_upload():
         st.session_state["DataFrame"] = None
         st.session_state["Classes"] = []
         st.session_state["IsDataFrameLoaded"] = False
+        st.success("Файл обратботан!\nМожете начинать работу :)")
     else:
         st.error("Файл не загружен.")
 
@@ -47,7 +47,6 @@ def main():
         "", type=['ifc'], key="uploaded_file", on_change=callback_upload)
 
     if "is_file_loaded" in st.session_state and st.session_state["is_file_loaded"]:
-        st.success("Файл обратботан!\nМожете начинать работу :)")
         show_pages(
             [
                 Page("Homepage.py", "Главная"),

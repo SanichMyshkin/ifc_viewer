@@ -83,38 +83,47 @@ def create_pandas_dataframe(data, pset_attributes):
 
 
 def format_ifcjs_psets(ifcJSON):
-    dict = {}
+    if ifcJSON is None:
+        return {}  # Возвращаем пустой словарь в случае, если ifcJSON равно None
+
+    result_dict = {}
+
     for pset in ifcJSON:
-        if "Qto" in pset["Name"]["value"]:
-            for quantity in pset["Quantities"]:
-                quantity_name = quantity["Name"]["value"]
-                quantity_value = ""
-                for key in quantity.keys():
-                    if "Value" in key:
-                        quantity_value = quantity[key]["value"]
-                if pset["expressID"] not in dict:
-                    dict[pset["expressID"]] = {
-                        "Name": pset["Name"]["value"],
-                        "Data": []
-                    }
-                dict[pset["expressID"]]["Data"].append({
-                    "Name": quantity_name,
-                    "Value": quantity_value
-                })
-        if "Pset" in pset["Name"]["value"]:
-            for property in pset["HasProperties"]:
-                property_name = property["Name"]["value"]
-                property_value = ""
-                for key in property.keys():
-                    if "Value" in key:
-                        property_value = property[key]["value"]
-                if pset["expressID"] not in dict:
-                    dict[pset["expressID"]] = {
-                        "Name": pset["Name"]["value"],
-                        "Data": []
-                    }
-                dict[pset["expressID"]]["Data"].append({
-                    "Name": property_name,
-                    "Value": property_value
-                })
-    return dict
+        if "Name" in pset and "Quantities" in pset:
+            if "Qto" in pset["Name"]["value"]:
+                for quantity in pset["Quantities"]:
+                    quantity_name = quantity["Name"]["value"]
+                    quantity_value = ""
+                    for key in quantity.keys():
+                        if "Value" in key and quantity[key] is not None:
+                            quantity_value = quantity[key]["value"]
+                    if pset["expressID"] not in result_dict:
+                        result_dict[pset["expressID"]] = {
+                            "Name": pset["Name"]["value"],
+                            "Data": []
+                        }
+                    result_dict[pset["expressID"]]["Data"].append({
+                        "Name": quantity_name,
+                        "Value": quantity_value
+                    })
+
+        if "Name" in pset and "HasProperties" in pset:
+            if "Pset" in pset["Name"]["value"]:
+                for property in pset["HasProperties"]:
+                    property_name = property["Name"]["value"]
+                    property_value = ""
+                    for key in property.keys():
+                        if "Value" in key and property[key] is not None:
+                            property_value = property[key]["value"]
+                    if pset["expressID"] not in result_dict:
+                        result_dict[pset["expressID"]] = {
+                            "Name": pset["Name"]["value"],
+                            "Data": []
+                        }
+                    result_dict[pset["expressID"]]["Data"].append({
+                        "Name": property_name,
+                        "Value": property_value
+                    })
+
+    return result_dict
+

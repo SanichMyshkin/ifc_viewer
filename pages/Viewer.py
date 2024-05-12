@@ -29,12 +29,9 @@ def get_psets_from_ifc_js():
 
 
 def format_ifc_js_psets(data):
+    if data is None:
+        return {}  # Возвращаем пустой словарь в случае, если data равно None
     return ifcdataparse.format_ifcjs_psets(data)
-
-
-def write_additional_data():
-    # Здесь вы можете извлечь и отобразить дополнительные данные из файла IFC
-    pass
 
 
 def write_pset_data():
@@ -42,14 +39,13 @@ def write_pset_data():
     if data:
         st.subheader("Свойства объекта")
         psets = format_ifc_js_psets(data['props'])
-        # st.markdown(psets)
-        # st.write(st.session_state["DataFrame"]['ExpressId'])
-        for pset in psets.values():
-            st.subheader(pset["Name"])
-            st.table(pset["Data"])
-
-        # Вызов функции для отображения дополнительных данных
-        write_additional_data()
+        if psets:
+            # st.markdown(psets)
+            for pset in psets.values():
+                st.subheader(pset["Name"])
+                st.table(pset["Data"])
+        else:
+            st.error('Ошибка, данные не найдены!', icon='🚨')
 
 
 def execute():
