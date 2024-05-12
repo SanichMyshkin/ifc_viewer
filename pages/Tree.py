@@ -1,6 +1,6 @@
 import streamlit as st
 import pandas as pd
-from pathlib import Path
+from io import BytesIO
 from tools import ifcdataparse
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -21,29 +21,29 @@ def load_data():
         st.session_state["DataFrame"] = dataframe
         st.session_state["Classes"] = classes
         st.session_state["IsDataFrameLoaded"] = True
-        st.session_state["file_name"] = "example.ifc"
 
 
 def get_ifc_pandas():
-    data, pset_attributes = ifcdataparse.get_objects_data_by_class(
-        st.session_state.ifc_file, "IfcBuildingElement")
-    dataframe = ifcdataparse.create_pandas_dataframe(data, pset_attributes)
-    classes = dataframe[CLASS].value_counts().keys().tolist()
-    return dataframe, classes
+    try:
+        data, pset_attributes = ifcdataparse.get_objects_data_by_class(
+            st.session_state.ifc_file, "IfcBuildingElement")
+        dataframe = ifcdataparse.create_pandas_dataframe(data, pset_attributes)
+        classes = dataframe[CLASS].value_counts().keys().tolist()
+        return dataframe, classes
+    except Exception as e:
+        st.error(f"Ошибка при загрузке данных: {e}")
+        return None, None
 
 
 def download_excel(file_name, dataframe):
-    file_name = file_name.replace('.ifc', '.xlsx')
-    project_root = Path(__file__).resolve().parent.parent
-    full_path = project_root / file_name
-    writer = pd.ExcelWriter(full_path, engine="xlsxwriter")
-    for object_class in dataframe[CLASS].unique():
-        df_class = dataframe[dataframe[CLASS] == object_class]
-        non_null_columns = df_class.columns[df_class.notna().any()]
-        df_class = df_class[non_null_columns]
-        df_class.to_excel(writer, sheet_name=object_class)
-    writer.close()
-    st.success(f"Файл успешно сохранен по пути: {full_path}")
+    with BytesIO() as temp_file:
+        with pd.ExcelWriter(temp_file, engine="xlsxwriter") as writer:
+            for object_class in dataframe[CLASS].unique():
+                df_class = dataframe[dataframe[CLASS] == object_class]
+                non_null_columns = df_class.columns[df_class.notna().any()]
+                df_class = df_class[non_null_columns]
+                df_class.to_excel(writer, sheet_name=object_class, index=False)
+        return temp_file.getvalue()
 
 
 def get_area(dataframe):
@@ -71,7 +71,7 @@ def display_dataframe(dataframe):
 
 
 def save_excel_for_class(name, dataframe):
-    download_excel(f"{name}_{st.session_state['file_name']}", dataframe)
+    return download_excel(f"{name}_{st.session_state['file_name']}", dataframe)
 
 
 def plot_doors_count(dataframe):
@@ -99,16 +99,25 @@ def display_data_table():
         dataframe = st.session_state["DataFrame"]
         st.subheader("Общая таблица данных")
         display_dataframe(dataframe)
-        if st.button("Сохранить *xlsx для общей таблицы", key="download_excel_all"):
-            download_excel(st.session_state["file_name"], dataframe)
+        file_name = st.session_state["file_name"]
+        st.download_button(
+            label="Скачать файл Excel",
+            data=download_excel(file_name, dataframe),
+            file_name='AllData.xlsx',
+            mime='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        )
         names_of_classes = dataframe['Class']
         unique_names = names_of_classes.unique()
         for name in unique_names:
             st.subheader(f"Данные класса: {name}")
             class_dataframe = dataframe[dataframe['Class'] == name]
             display_dataframe(class_dataframe)
-            if st.button(f"Сохранить *xlsx для класса {name}", key=f"download_excel_{name}"):
-                save_excel_for_class(name, class_dataframe)
+            st.download_button(
+                label=f"Скачать файл Excel класса {name}",
+                data=download_excel(f"{name}_{file_name}", class_dataframe),
+                file_name=f'{name}.xlsx',
+                mime='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+            )
     else:
         st.header("Загрузите модель для работы с данными")
 
