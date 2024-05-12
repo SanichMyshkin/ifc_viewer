@@ -35,7 +35,7 @@ def get_ifc_pandas():
         return None, None
 
 
-def download_excel(file_name, dataframe):
+def download_excel(dataframe):
     with BytesIO() as temp_file:
         with pd.ExcelWriter(temp_file, engine="xlsxwriter") as writer:
             for object_class in dataframe[CLASS].unique():
@@ -55,14 +55,13 @@ def get_area(dataframe):
         return None
     sum_by_level = dataframe.groupby('Level').agg(
         {column: 'sum' for column in slab_area_columns}).reset_index()
-    total_row = pd.DataFrame({"Level": ["Суммарная площадь"]})
-    for column in slab_area_columns:
-        total_row[column] = sum_by_level[column].sum()
-    sum_by_level = pd.concat([sum_by_level, total_row])
-    sum_by_level.index = sum_by_level.index + 1
-    sum_by_level.loc[len(sum_by_level)] = sum_by_level.sum(numeric_only=True)
-    sum_by_level.iloc[-1, 0] = "Сумма"
     return sum_by_level
+
+
+def sum_area(area_dataframe):
+    sums = area_dataframe.drop(columns=['Level']).sum()
+    result = pd.DataFrame(sums).transpose()
+    return result
 
 
 def display_dataframe(dataframe):
@@ -99,10 +98,9 @@ def display_data_table():
         dataframe = st.session_state["DataFrame"]
         st.subheader("Общая таблица данных")
         display_dataframe(dataframe)
-        file_name = st.session_state["file_name"]
         st.download_button(
             label="Скачать файл Excel",
-            data=download_excel(file_name, dataframe),
+            data=download_excel(dataframe),
             file_name='AllData.xlsx',
             mime='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
         )
@@ -114,7 +112,7 @@ def display_data_table():
             display_dataframe(class_dataframe)
             st.download_button(
                 label=f"Скачать файл Excel класса {name}",
-                data=download_excel(f"{name}_{file_name}", class_dataframe),
+                data=download_excel(class_dataframe),
                 file_name=f'{name}.xlsx',
                 mime='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
             )
@@ -129,9 +127,12 @@ def display_area_by_level():
     if st.session_state.IsDataFrameLoaded:
         dataframe = st.session_state["DataFrame"]
         area_dataframe = get_area(dataframe)
+        area_of_sum = sum_area(area_dataframe)
         if area_dataframe is not None:
-            area_dataframe = area_dataframe.iloc[:-1]
             st.write(area_dataframe)
+            st.header('Сумма площади по каждому типу')
+            st.write(area_of_sum)
+
     else:
         st.header("Загрузите модель для работы с данными")
 
