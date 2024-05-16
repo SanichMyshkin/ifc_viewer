@@ -1,4 +1,5 @@
 import ifcopenshell.util.element as Element
+import pandas as pd
 
 
 def get_objects_data_by_class(file, class_type):
@@ -59,7 +60,6 @@ def get_attribute_value(object_data, attribute):
 
 
 def create_pandas_dataframe(data, pset_attributes):
-    import pandas as pd
 
     # Лист Атрибутов
     attributes = [
@@ -84,10 +84,12 @@ def create_pandas_dataframe(data, pset_attributes):
 
 def format_ifcjs_psets(ifcJSON):
     if ifcJSON is None:
-        return {}  # Возвращаем пустой словарь в случае, если ifcJSON равно None
-
+        return {}
     result_dict = {}
-
+    # result_dict[ifcJSON['id']] = {
+    #    'Name': 'Name', 'Data': []}  # Data  = [pandas] тут надо заполнить имя и выдать, возможно буду делать вместе с отальными свойствами, пока что хз
+    # print(ifcJSON, '\n======================')
+    ifcJSON = ifcJSON['props']
     for pset in ifcJSON:
         if "Name" in pset and "Quantities" in pset:
             if "Qto" in pset["Name"]["value"]:
@@ -124,6 +126,5 @@ def format_ifcjs_psets(ifcJSON):
                         "Name": property_name,
                         "Value": property_value
                     })
-
+    print(result_dict)
     return result_dict
-

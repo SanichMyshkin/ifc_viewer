@@ -3,10 +3,7 @@ import pandas as pd
 from io import BytesIO
 from tools import ifcdataparse
 import matplotlib.pyplot as plt
-import seaborn as sns
-
-CLASS = "Class"
-LEVEL = "Level"
+import numpy as np
 
 
 def initialize_session_state():
@@ -28,7 +25,9 @@ def get_ifc_pandas():
         data, pset_attributes = ifcdataparse.get_objects_data_by_class(
             st.session_state.ifc_file, "IfcBuildingElement")
         dataframe = ifcdataparse.create_pandas_dataframe(data, pset_attributes)
-        classes = dataframe[CLASS].value_counts().keys().tolist()
+        classes = dataframe['Class'].value_counts().keys().tolist()
+        st.write(dataframe)
+        st.write(classes)
         return dataframe, classes
     except Exception as e:
         st.error(f"Ошибка при загрузке данных: {e}")
@@ -38,8 +37,8 @@ def get_ifc_pandas():
 def download_excel(dataframe):
     with BytesIO() as temp_file:
         with pd.ExcelWriter(temp_file, engine="xlsxwriter") as writer:
-            for object_class in dataframe[CLASS].unique():
-                df_class = dataframe[dataframe[CLASS] == object_class]
+            for object_class in dataframe['Class'].unique():
+                df_class = dataframe[dataframe['Class'] == object_class]
                 non_null_columns = df_class.columns[df_class.notna().any()]
                 df_class = df_class[non_null_columns]
                 df_class.to_excel(writer, sheet_name=object_class, index=False)
@@ -51,7 +50,8 @@ def get_area(dataframe):
         column for column in dataframe.columns if 'Slab' in column and 'Area' in column]
     if not slab_area_columns:
         st.error(
-            "Данные о площади не доступны. Возможно, вы используете старую версию IFC.")
+            "Данные о площади не доступны. Возможно, вы используете старую версию IFC")
+        st.warning('Для корректной работы рекомендуеться использовать схемы IFC4')
         return None
     sum_by_level = dataframe.groupby('Level').agg(
         {column: 'sum' for column in slab_area_columns}).reset_index()
@@ -59,9 +59,10 @@ def get_area(dataframe):
 
 
 def sum_area(area_dataframe):
-    sums = area_dataframe.drop(columns=['Level']).sum()
-    result = pd.DataFrame(sums).transpose()
-    return result
+    if area_dataframe is not None:
+        sums = area_dataframe.drop(columns=['Level']).sum()
+        result = pd.DataFrame(sums).transpose()
+        return result
 
 
 def display_dataframe(dataframe):
@@ -73,21 +74,19 @@ def save_excel_for_class(name, dataframe):
     return download_excel(f"{name}_{st.session_state['file_name']}", dataframe)
 
 
-def plot_doors_count(dataframe):
-    doors_count = dataframe[dataframe['Class'] == 'IfcDoor'].groupby('Level')[
-        'Class'].count().reset_index()
-    sns.set_style("whitegrid")
-    plt.figure(figsize=(10, 6))
-    ax = sns.barplot(x='Level', y='Class', data=doors_count, palette="Blues")
-    ax.set_title('Количество дверей на каждом этаже', fontsize=16)
-    ax.set_xlabel('Этаж', fontsize=14)
-    ax.set_ylabel('Количество дверей', fontsize=14)
-    ax.tick_params(axis='x', labelsize=12, rotation=45)
-    ax.tick_params(axis='y', labelsize=12)
-    for p in ax.patches:
-        ax.annotate(f'{p.get_height()}', (p.get_x() + p.get_width() / 2., p.get_height()), ha='center', va='center',
-                    fontsize=12, color='black', xytext=(0, 5), textcoords='offset points')
-    st.pyplot(plt.gcf())
+def plot_stat(dataframe):
+    material_counts = dataframe['Class'].value_counts()
+    fig, ax = plt.subplots()
+    # Создание градиента цветов
+    colors = plt.cm.viridis(np.linspace(0, 1, len(material_counts)))
+    ax.bar(material_counts.index, material_counts.values, color=colors)
+    ax.set_ylabel('Количество')
+    plt.xticks(rotation=45, ha='right')
+    for i, val in enumerate(material_counts):
+        ax.text(
+            i, val, f'{val / material_counts.sum() * 100:.1f}%', ha='center', va='bottom')
+    plt.tight_layout()
+    st.pyplot(fig)
 
 
 def display_data_table():
@@ -117,11 +116,10 @@ def display_data_table():
                 mime='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
             )
     else:
-        st.header("Загрузите модель для работы с данными")
+        st.error("Загрузите модель для работы с данными")
 
 
 def display_area_by_level():
-    st.header("Площадь по этажам")
     initialize_session_state()
     load_data()
     if st.session_state.IsDataFrameLoaded:
@@ -129,23 +127,32 @@ def display_area_by_level():
         area_dataframe = get_area(dataframe)
         area_of_sum = sum_area(area_dataframe)
         if area_dataframe is not None:
-            st.write(area_dataframe)
-            st.header('Сумма площади по каждому типу')
-            st.write(area_of_sum)
+            col1, col2 = st.columns(2)
+            with col1:
+                st.header("Площадь по этажам")
+                st.write(area_dataframe)
+            with col2:
+                st.header('Суммарная площадь')
+                st.write(area_of_sum)
 
     else:
-        st.header("Загрузите модель для работы с данными")
+        st.error("Загрузите модель для работы с данными")
 
 
 def display_statistics():
-    st.header("Статистика")
+    # st.header("Статистика")
     initialize_session_state()
     load_data()
     if st.session_state.IsDataFrameLoaded:
         dataframe = st.session_state["DataFrame"]
-        plot_doors_count(dataframe)
+        col1, col2 = st.columns(2)
+        with col1:
+            st.header('Отношение элементов')
+            plot_stat(dataframe)
+        with col2:
+            st.write("Надо подумать")
     else:
-        st.header("Загрузите модель для работы с данными")
+        st.error("Загрузите модель для работы с данными")
 
 
 def execute():

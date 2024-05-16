@@ -13,7 +13,8 @@ def set_page_configuration():
 def callback_upload():
     if "uploaded_file" in st.session_state and st.session_state["uploaded_file"] is not None:
         st.session_state["file_name"] = st.session_state["uploaded_file"].name
-        st.session_state["array_buffer"] = st.session_state["uploaded_file"].getvalue()
+        st.session_state["array_buffer"] = st.session_state["uploaded_file"].getvalue(
+        )
         st.session_state["ifc_file"] = ifcopenshell.file.from_string(
             st.session_state["array_buffer"].decode("utf-8"))
 
@@ -44,7 +45,9 @@ def main():
     design_main_page()
 
     st.file_uploader(
-        "", type=['ifc'], key="uploaded_file", on_change=callback_upload)
+        label="Ненужный текст, что бы не ругалась консоль",
+        type=['ifc'], key="uploaded_file",
+        on_change=callback_upload, label_visibility='collapsed')
 
     if "is_file_loaded" in st.session_state and st.session_state["is_file_loaded"]:
         show_pages(

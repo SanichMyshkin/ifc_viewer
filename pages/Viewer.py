@@ -38,9 +38,9 @@ def write_pset_data():
     data = get_psets_from_ifc_js()
     if data:
         st.subheader("Свойства объекта")
-        psets = format_ifc_js_psets(data['props'])
+        # psets = format_ifc_js_psets(data['props']) # старая версия
+        psets = format_ifc_js_psets(data)
         if psets:
-            # st.markdown(psets)
             for pset in psets.values():
                 st.subheader(pset["Name"])
                 st.table(pset["Data"])
@@ -49,6 +49,7 @@ def write_pset_data():
 
 
 def execute():
+    st.header('Визуализация модели')
     if "ifc_file" in session and session["ifc_file"]:
         if "ifc_js_response" not in session:
             session["ifc_js_response"] = ""
@@ -58,7 +59,7 @@ def execute():
             write_pset_data()
 
     else:
-        st.header("Для начала загрузите саму модель на главной странице")
+        st.error("Для начала загрузите саму модель на главной странице")
 
 
 session = st.session_state
