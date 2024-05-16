@@ -22,7 +22,7 @@ def callback_upload():
         st.session_state["DataFrame"] = None
         st.session_state["Classes"] = []
         st.session_state["IsDataFrameLoaded"] = False
-        st.success("Файл обратботан!\nМожете начинать работу :)")
+        st.success("Файл обратботан! Можете начинать работу :)")
     else:
         st.error("Файл не загружен.")
 

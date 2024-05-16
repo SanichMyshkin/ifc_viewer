@@ -49,10 +49,11 @@ def write_pset_data():
 
 
 def execute():
-    st.header('Визуализация модели')
     if "ifc_file" in session and session["ifc_file"]:
         if "ifc_js_response" not in session:
             session["ifc_js_response"] = ""
+        name = st.session_state['ifc_file'].by_type('IfcProject')[0][5]
+        st.subheader(name)
         draw_3d_viewer()
         tab1 = st.columns(2)[0]
         with tab1:

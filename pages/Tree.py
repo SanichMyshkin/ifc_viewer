@@ -26,8 +26,8 @@ def get_ifc_pandas():
             st.session_state.ifc_file, "IfcBuildingElement")
         dataframe = ifcdataparse.create_pandas_dataframe(data, pset_attributes)
         classes = dataframe['Class'].value_counts().keys().tolist()
-        st.write(dataframe)
-        st.write(classes)
+        # st.write(dataframe)
+        # st.write(classes)
         return dataframe, classes
     except Exception as e:
         st.error(f"Ошибка при загрузке данных: {e}")
@@ -90,7 +90,7 @@ def plot_stat(dataframe):
 
 
 def display_data_table():
-    st.header("Таблица данных")
+    # st.header("Таблица данных")
     initialize_session_state()
     load_data()
     if st.session_state.IsDataFrameLoaded:
@@ -127,13 +127,10 @@ def display_area_by_level():
         area_dataframe = get_area(dataframe)
         area_of_sum = sum_area(area_dataframe)
         if area_dataframe is not None:
-            col1, col2 = st.columns(2)
-            with col1:
-                st.header("Площадь по этажам")
-                st.write(area_dataframe)
-            with col2:
-                st.header('Суммарная площадь')
-                st.write(area_of_sum)
+            st.subheader("Площадь по этажам")
+            st.write(area_dataframe)
+            st.subheader('Суммарная площадь')
+            st.write(area_of_sum)
 
     else:
         st.error("Загрузите модель для работы с данными")
@@ -147,7 +144,7 @@ def display_statistics():
         dataframe = st.session_state["DataFrame"]
         col1, col2 = st.columns(2)
         with col1:
-            st.header('Отношение элементов')
+            st.subheader('Отношение элементов')
             plot_stat(dataframe)
         with col2:
             st.write("Надо подумать")

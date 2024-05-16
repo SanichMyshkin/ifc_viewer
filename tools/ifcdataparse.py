@@ -126,5 +126,5 @@ def format_ifcjs_psets(ifcJSON):
                         "Name": property_name,
                         "Value": property_value
                     })
-    print(result_dict)
+    #print(result_dict)
     return result_dict
