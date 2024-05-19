@@ -13,16 +13,21 @@ def set_page_configuration():
 def callback_upload():
     if "uploaded_file" in st.session_state and st.session_state["uploaded_file"] is not None:
         st.session_state["file_name"] = st.session_state["uploaded_file"].name
-        st.session_state["array_buffer"] = st.session_state["uploaded_file"].getvalue(
-        )
-        st.session_state["ifc_file"] = ifcopenshell.file.from_string(
-            st.session_state["array_buffer"].decode("utf-8"))
+        try:
+            st.session_state["array_buffer"] = st.session_state["uploaded_file"].getvalue(
+            )
+            decoded_content = st.session_state["array_buffer"].decode("utf-8")
 
-        st.session_state["is_file_loaded"] = True
-        st.session_state["DataFrame"] = None
-        st.session_state["Classes"] = []
-        st.session_state["IsDataFrameLoaded"] = False
-        st.success("Файл обратботан! Можете начинать работу :)")
+            st.session_state["ifc_file"] = ifcopenshell.file.from_string(
+                decoded_content)
+
+            st.session_state["is_file_loaded"] = True
+            st.session_state["DataFrame"] = None
+            st.session_state["Classes"] = []
+            st.session_state["IsDataFrameLoaded"] = False
+            st.success("Файл обработан! Можете начинать работу :)")
+        except UnicodeDecodeError:
+            st.error("Не удалось декодировать файл. Проверьте кодировку.")
     else:
         st.error("Файл не загружен.")
 
@@ -36,11 +41,7 @@ def design_main_page():
 
 def main():
     set_page_configuration()
-    st.markdown(
-        '''
-        ### Web IFC-Viewer - приложение для виузализации и анализа ЦИМ
-        '''
-    )
+    st.header('Web IFC-Viewer - приложение для визуализации и анализа ЦИМ')
 
     design_main_page()
 

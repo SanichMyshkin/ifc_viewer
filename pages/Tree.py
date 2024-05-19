@@ -22,7 +22,7 @@ def load_data():
 
 def get_ifc_pandas():
     try:
-        data, pset_attributes = ifcdataparse.get_objects_data_by_class(
+        data, pset_attributes = ifcdataparse.get_objeƒcts_data_by_class(
             st.session_state.ifc_file, "IfcBuildingElement")
         dataframe = ifcdataparse.create_pandas_dataframe(data, pset_attributes)
         classes = dataframe['Class'].value_counts().keys().tolist()

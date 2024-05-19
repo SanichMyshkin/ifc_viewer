@@ -1,8 +1,10 @@
 import streamlit as st
+import pandas as pd
 import json
 from pathlib import Path
 import streamlit.components.v1 as components
 from tools import ifcdataparse
+import urllib.parse
 
 models_dir = (Path(__file__).parent / "models").absolute()
 _component_func = components.declare_component(
@@ -25,27 +27,27 @@ def get_current_ifc_file():
 
 def get_psets_from_ifc_js():
     if session.ifc_js_response:
-        return json.loads(session.ifc_js_response)
-
-
-def format_ifc_js_psets(data):
-    if data is None:
-        return {}  # Возвращаем пустой словарь в случае, если data равно None
-    return ifcdataparse.format_ifcjs_psets(data)
+        decoded_response = urllib.parse.unquote(session.ifc_js_response)
+        return json.loads(decoded_response)
 
 
 def write_pset_data():
     data = get_psets_from_ifc_js()
     if data:
-        st.subheader("Свойства объекта")
-        # psets = format_ifc_js_psets(data['props']) # старая версия
-        psets = format_ifc_js_psets(data)
-        if psets:
-            for pset in psets.values():
-                st.subheader(pset["Name"])
-                st.table(pset["Data"])
-        else:
-            st.error('Ошибка, данные не найдены!', icon='🚨')
+        name, qtos, psets = ifcdataparse.get_ifcdata(data)
+        st.header(name)
+        for key, value in qtos.items():
+            if value:
+                if value.get('id'):
+                    value.pop('id')
+                st.subheader(key)
+                st.table(value)
+        for key, value in psets.items():
+            if value:
+                if value.get('id'):
+                    value.pop('id')
+                st.subheader(key)
+                st.table(value)
 
 
 def execute():
@@ -58,7 +60,6 @@ def execute():
         tab1 = st.columns(2)[0]
         with tab1:
             write_pset_data()
-
     else:
         st.error("Для начала загрузите саму модель на главной странице")
 

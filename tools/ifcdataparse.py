@@ -1,5 +1,6 @@
 import ifcopenshell.util.element as Element
 import pandas as pd
+import streamlit as st
 
 
 def get_objects_data_by_class(file, class_type):
@@ -82,49 +83,15 @@ def create_pandas_dataframe(data, pset_attributes):
     return pd.DataFrame.from_records(pandas_data, columns=attributes)
 
 
-def format_ifcjs_psets(ifcJSON):
-    if ifcJSON is None:
-        return {}
-    result_dict = {}
-    # result_dict[ifcJSON['id']] = {
-    #    'Name': 'Name', 'Data': []}  # Data  = [pandas] тут надо заполнить имя и выдать, возможно буду делать вместе с отальными свойствами, пока что хз
-    # print(ifcJSON, '\n======================')
-    ifcJSON = ifcJSON['props']
-    for pset in ifcJSON:
-        if "Name" in pset and "Quantities" in pset:
-            if "Qto" in pset["Name"]["value"]:
-                for quantity in pset["Quantities"]:
-                    quantity_name = quantity["Name"]["value"]
-                    quantity_value = ""
-                    for key in quantity.keys():
-                        if "Value" in key and quantity[key] is not None:
-                            quantity_value = quantity[key]["value"]
-                    if pset["expressID"] not in result_dict:
-                        result_dict[pset["expressID"]] = {
-                            "Name": pset["Name"]["value"],
-                            "Data": []
-                        }
-                    result_dict[pset["expressID"]]["Data"].append({
-                        "Name": quantity_name,
-                        "Value": quantity_value
-                    })
+def get_ifcdata(ifc_json_id):
+    object_name = {}
+    id = ifc_json_id['id']
+    if ifc_json_id:
+        file = st.session_state.ifc_file
+        object = file.by_id(id)
 
-        if "Name" in pset and "HasProperties" in pset:
-            if "Pset" in pset["Name"]["value"]:
-                for property in pset["HasProperties"]:
-                    property_name = property["Name"]["value"]
-                    property_value = ""
-                    for key in property.keys():
-                        if "Value" in key and property[key] is not None:
-                            property_value = property[key]["value"]
-                    if pset["expressID"] not in result_dict:
-                        result_dict[pset["expressID"]] = {
-                            "Name": pset["Name"]["value"],
-                            "Data": []
-                        }
-                    result_dict[pset["expressID"]]["Data"].append({
-                        "Name": property_name,
-                        "Value": property_value
-                    })
-    #print(result_dict)
-    return result_dict
+        qtos = Element.get_psets(object, qtos_only=True)
+        psets = Element.get_psets(object, psets_only=True)
+        object_name = object[2]
+
+        return object_name, qtos, psets
