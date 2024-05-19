@@ -84,14 +84,11 @@ def create_pandas_dataframe(data, pset_attributes):
 
 
 def get_ifcdata(ifc_json_id):
-    object_name = {}
     id = ifc_json_id['id']
     if ifc_json_id:
         file = st.session_state.ifc_file
         object = file.by_id(id)
-
         qtos = Element.get_psets(object, qtos_only=True)
         psets = Element.get_psets(object, psets_only=True)
         object_name = object[2]
-
         return object_name, qtos, psets

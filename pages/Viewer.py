@@ -1,5 +1,4 @@
 import streamlit as st
-import pandas as pd
 import json
 from pathlib import Path
 import streamlit.components.v1 as components
@@ -35,7 +34,7 @@ def write_pset_data():
     data = get_psets_from_ifc_js()
     if data:
         name, qtos, psets = ifcdataparse.get_ifcdata(data)
-        st.header(name)
+        st.subheader(f'Наименование: {name}', divider='gray')
         for key, value in qtos.items():
             if value:
                 if value.get('id'):

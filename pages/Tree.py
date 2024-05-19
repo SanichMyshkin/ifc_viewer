@@ -22,12 +22,10 @@ def load_data():
 
 def get_ifc_pandas():
     try:
-        data, pset_attributes = ifcdataparse.get_objeƒcts_data_by_class(
+        data, pset_attributes = ifcdataparse.get_objects_data_by_class(
             st.session_state.ifc_file, "IfcBuildingElement")
         dataframe = ifcdataparse.create_pandas_dataframe(data, pset_attributes)
         classes = dataframe['Class'].value_counts().keys().tolist()
-        # st.write(dataframe)
-        # st.write(classes)
         return dataframe, classes
     except Exception as e:
         st.error(f"Ошибка при загрузке данных: {e}")
@@ -51,17 +49,33 @@ def get_area(dataframe):
     if not slab_area_columns:
         st.error(
             "Данные о площади не доступны. Возможно, вы используете старую версию IFC")
-        st.warning('Для корректной работы рекомендуеться использовать схемы IFC4')
+        st.warning('Для корректной работы рекомендуется использовать схемы IFC4')
         return None
     sum_by_level = dataframe.groupby('Level').agg(
-        {column: 'sum' for column in slab_area_columns}).reset_index()
-    return sum_by_level
+        {column: lambda x: round(x.sum(), 3) for column in slab_area_columns}).reset_index()
+    sum_by_level_sorted = sum_by_level.sort_values(
+        by='Level', key=lambda x: pd.to_numeric(x, errors='coerce'))
+    sum_by_level_sorted.index = range(1, len(sum_by_level_sorted) + 1)
+    for column in slab_area_columns:
+        sum_by_level_sorted[column] = sum_by_level_sorted[column].astype(
+            str) + ' м²'
+    return sum_by_level_sorted
 
 
 def sum_area(area_dataframe):
     if area_dataframe is not None:
-        sums = area_dataframe.drop(columns=['Level']).sum()
+        clean_dataframe = area_dataframe.copy()
+        for column in clean_dataframe.columns:
+            if column != 'Level':
+                clean_dataframe[column] = clean_dataframe[column].replace(
+                    ' м²', '', regex=True).astype(float)
+
+        sums = clean_dataframe.drop(columns=['Level']).sum()
+        sums = sums.round(3)
         result = pd.DataFrame(sums).transpose()
+
+        result = result.applymap(lambda x: str(x) + ' м²')
+
         return result
 
 
@@ -128,9 +142,9 @@ def display_area_by_level():
         area_of_sum = sum_area(area_dataframe)
         if area_dataframe is not None:
             st.subheader("Площадь по этажам")
-            st.write(area_dataframe)
+            st.dataframe(area_dataframe, hide_index=True)
             st.subheader('Суммарная площадь')
-            st.write(area_of_sum)
+            st.dataframe(area_of_sum, hide_index=True)
 
     else:
         st.error("Загрузите модель для работы с данными")
