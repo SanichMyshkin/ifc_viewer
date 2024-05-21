@@ -10,6 +10,9 @@ import {
   Vector2,
   WebGLRenderer,
   MeshBasicMaterial,
+  Plane,
+  PlaneHelper,
+  Vector3
 } from "./components/three.module.js";
 import { OrbitControls } from "./components/OrbitControls.js";
 import {
@@ -32,6 +35,11 @@ const preselectMat = new MeshBasicMaterial({ ...materialParams, color: 0xf1a832 
 const selectMat = new MeshBasicMaterial({ ...materialParams, color: 0xc63f35 });
 const sendValue = value => Streamlit.setComponentValue(value);
 const scene = new Scene();
+
+// Переменные для управления сечением
+let clippingEnabled = true;
+const plane = new Plane(new Vector3(0, -1, 0), 1);
+const planeHelper = new PlaneHelper(plane, 10, 0xff0000);
 
 const setup = () => {
   const ifc = ifcLoader.ifcManager;
@@ -110,7 +118,6 @@ const setup = () => {
     }
   };
 
-
   const highlightModel = { id: -1 };
   const selectModel = { id: -1 };
 
@@ -143,6 +150,24 @@ const setup = () => {
       console.error('Ошибка загрузки модели:', error);
     }
   );
+
+  // Добавление плоскости отсечения
+  // scene.add(planeHelper); // Нужно что бы отображать плоскость сечения
+
+  // Настройка плоскостей отсечения для рендерера
+  renderer.clippingPlanes = clippingEnabled ? [plane] : [];
+
+  // Обработчики событий для управления плоскостью отсечения
+  window.addEventListener('keydown', (event) => {
+    if (event.key === '-') {
+      plane.constant -= 1; // Двигаем плоскость вверх
+    } else if (event.key === '=') {
+      plane.constant += 1; // Двигаем плоскость вниз
+    } else if (event.key === 'c') { // Включение/выключение плоскости отсечения
+      clippingEnabled = !clippingEnabled;
+      renderer.clippingPlanes = clippingEnabled ? [plane] : [];
+    }
+  });
 };
 
 // Функция загрузки IFC модели

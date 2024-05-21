@@ -169,7 +169,9 @@ def display_statistics():
 def execute():
     st.sidebar.title("Навигация")
     app_mode = st.sidebar.radio(
-        "Выберите страницу", ["Таблица данных", "Площадь по этажам", "Статистика"])
+        "Выберите страницу", ["Таблица данных",
+                              "Площадь по этажам",
+                              "Статистика"])
 
     if app_mode == "Таблица данных":
         display_data_table()
