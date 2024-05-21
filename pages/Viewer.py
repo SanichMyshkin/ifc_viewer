@@ -50,6 +50,9 @@ def write_pset_data():
 
 
 def execute():
+    with st.sidebar:
+        st.write("Воткнуть инструкцию для использования секущими плоскостями")
+        st.write('\n 9,0,-,= x c ')
     if "ifc_file" in session and session["ifc_file"]:
         if "ifc_js_response" not in session:
             session["ifc_js_response"] = ""
