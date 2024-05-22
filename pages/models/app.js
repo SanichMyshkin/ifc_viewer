@@ -1,5 +1,5 @@
 import { IFCLoader } from "./components/IFCLoader.js";
-import { AmbientLight, AxesHelper, DirectionalLight, GridHelper, PerspectiveCamera, Scene, Raycaster, Vector2, WebGLRenderer, MeshBasicMaterial, Plane, PlaneHelper, Vector3, DoubleSide } from "./components/three.module.js";
+import { AmbientLight, AxesHelper, DirectionalLight, GridHelper, PerspectiveCamera, Scene, Raycaster, Vector2, WebGLRenderer, MeshBasicMaterial, Plane, PlaneHelper, Vector3, DoubleSide, Mesh, PlaneGeometry } from "./components/three.module.js";
 import { OrbitControls } from "./components/OrbitControls.js";
 import { acceleratedRaycast, computeBoundsTree, disposeBoundsTree } from './components/three-mesh-bvh/three-mesh-bvh.js';
 
@@ -13,16 +13,30 @@ const sendValue = value => Streamlit.setComponentValue(value);
 const scene = new Scene();
 
 let clippingEnabled = false;
-const plane = new Plane(new Vector3(0, -1, 0), 1);
+const gap = 0.01; // Зазор между плоскостями
+
+const plane = new Plane(new Vector3(0, -1, 0), gap);
 const planeHelper = new PlaneHelper(plane, 10);
-planeHelper.material.side = DoubleSide;
 planeHelper.visible = false; // Hide clipping plane by default
 
 let verticalClippingEnabled = false;
-let verticalPlane = new Plane(new Vector3(1, 0, 0), 0);
+const verticalPlane = new Plane(new Vector3(1, 0, 0), gap);
 const verticalPlaneHelper = new PlaneHelper(verticalPlane, 10);
-verticalPlaneHelper.material.side = DoubleSide;
 verticalPlaneHelper.visible = false; // Hide vertical clipping plane by default
+
+const largePlaneSize = 100; // Определение размера для сеток
+
+// Create grid helpers for clipping planes
+const horizontalGrid = new GridHelper(largePlaneSize, 100, 0xff0000, 0xff0000);
+horizontalGrid.rotation.x = Math.PI;
+horizontalGrid.visible = false;
+
+const verticalGrid = new GridHelper(largePlaneSize, 100, 0x00ff00, 0x00ff00);
+verticalGrid.rotation.z = Math.PI / 2;
+verticalGrid.visible = false;
+
+scene.add(horizontalGrid);
+scene.add(verticalGrid);
 
 const setup = () => {
   const ifc = ifcLoader.ifcManager;
@@ -106,45 +120,61 @@ const setup = () => {
     sendValue(getObjectData(event));
   };
 
-  scene.add(planeHelper);
-  scene.add(verticalPlaneHelper);
-
-  const planeMaterial = new MeshBasicMaterial({ color: 0x0000ff, opacity: 0.4, transparent: true, side: DoubleSide });
-  const verticalPlaneMaterial = new MeshBasicMaterial({ color: 0x00ff00, opacity: 0.4, transparent: true, side: DoubleSide });
-
-  planeHelper.material = planeMaterial;
-  verticalPlaneHelper.material = verticalPlaneMaterial;
-
   const updateClippingPlanes = () => {
     renderer.clippingPlanes = [
       ...(clippingEnabled ? [plane] : []),
       ...(verticalClippingEnabled ? [verticalPlane] : [])
     ];
+
+    // Update horizontal clipping grid
+    horizontalGrid.visible = clippingEnabled;
+    if (clippingEnabled) {
+      horizontalGrid.position.copy(plane.normal).multiplyScalar(-plane.constant + gap); // -plane.constant исправляет, но появляеться мерцание
+    }
+
+
+    // Update vertical clipping grid
+    verticalGrid.visible = verticalClippingEnabled;
+    if (verticalClippingEnabled) {
+      verticalGrid.position.copy(verticalPlane.normal).multiplyScalar(-verticalPlane.constant + gap); // -verticalPlane.constant исправляет, но появляеться мерцание
+    }
+
   };
+
+  const step = 0.3; // скорость изменения движения секущей плоскости (по хорошему нужно вывести это через Streamlit сбоку)
 
   window.addEventListener('keydown', (event) => {
     if (event.key === '-' || event.key === '=') {
       if (clippingEnabled) {
-        if (event.key === '-') plane.constant -= 1;
-        else if (event.key === '=') plane.constant += 1;
+        if (event.key === '-') plane.constant -= step;
+        else if (event.key === '=') plane.constant += step;
+        updateClippingPlanes();
+        
       }
     } else if (event.key === '2') {
       clippingEnabled = !clippingEnabled;
       planeHelper.visible = clippingEnabled;
       updateClippingPlanes();
+      if (!verticalClippingEnabled) {
+        grid.visible = !clippingEnabled;
+      }
     }
   });
 
   window.addEventListener('keydown', (event) => {
     if (event.key === '9' || event.key === '0') {
       if (verticalClippingEnabled) {
-        if (event.key === '9') verticalPlane.constant -= 1;
-        else if (event.key === '0') verticalPlane.constant += 1;
+        if (event.key === '9') verticalPlane.constant -= step;
+        else if (event.key === '0') verticalPlane.constant += step;
+        updateClippingPlanes();
       }
     } else if (event.key === '1') {
       verticalClippingEnabled = !verticalClippingEnabled;
       verticalPlaneHelper.visible = verticalClippingEnabled;
       updateClippingPlanes();
+      if (!clippingEnabled) {
+        grid.visible = !verticalClippingEnabled;
+      }
     }
   });
 };
@@ -166,4 +196,4 @@ const loadURL = async (event) => {
 Streamlit.loadViewer(setup);
 Streamlit.events.addEventListener(Streamlit.RENDER_EVENT, loadURL);
 Streamlit.setComponentReady();
-Streamlit.setFrameHeight(window.innerWidth / 1);
+Streamlit.setFrameHeight(window.innerWidth / 1.4);
