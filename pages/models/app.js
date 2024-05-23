@@ -132,7 +132,6 @@ const setup = () => {
       horizontalGrid.position.copy(plane.normal).multiplyScalar(-plane.constant + gap); // -plane.constant исправляет, но появляеться мерцание
     }
 
-
     // Update vertical clipping grid
     verticalGrid.visible = verticalClippingEnabled;
     if (verticalClippingEnabled) {
@@ -141,17 +140,11 @@ const setup = () => {
 
   };
 
-  const step = 0.3; // скорость изменения движения секущей плоскости (по хорошему нужно вывести это через Streamlit сбоку)
+  let step = 0.3; // скорость изменения движения секущей плоскости (по хорошему нужно вывести это через Streamlit сбоку)
 
   window.addEventListener('keydown', (event) => {
-    if (event.key === '-' || event.key === '=') {
-      if (clippingEnabled) {
-        if (event.key === '-') plane.constant -= step;
-        else if (event.key === '=') plane.constant += step;
-        updateClippingPlanes();
-        
-      }
-    } else if (event.key === '2') {
+    // Включение/выключение горизонтальной плоскости с помощью Ctrl + 1
+    if (event.ctrlKey && event.key === '2') {
       clippingEnabled = !clippingEnabled;
       planeHelper.visible = clippingEnabled;
       updateClippingPlanes();
@@ -159,21 +152,36 @@ const setup = () => {
         grid.visible = !clippingEnabled;
       }
     }
-  });
 
-  window.addEventListener('keydown', (event) => {
-    if (event.key === '9' || event.key === '0') {
-      if (verticalClippingEnabled) {
-        if (event.key === '9') verticalPlane.constant -= step;
-        else if (event.key === '0') verticalPlane.constant += step;
-        updateClippingPlanes();
-      }
-    } else if (event.key === '1') {
+    // Включение/выключение вертикальной плоскости с помощью Ctrl + 2
+    if (event.ctrlKey && event.key === '1') {
       verticalClippingEnabled = !verticalClippingEnabled;
       verticalPlaneHelper.visible = verticalClippingEnabled;
       updateClippingPlanes();
       if (!clippingEnabled) {
         grid.visible = !verticalClippingEnabled;
+      }
+    }
+
+    // Изменение скорости с помощью стрелок влево и вправо
+    if (event.key === 'ArrowLeft') {
+      step = Math.max(0.1, step - 0.5); // Уменьшение скорости при нажатии стрелки влево
+    } else if (event.key === 'ArrowRight') {
+      step += 0.5; // Увеличение скорости при нажатии стрелки вправо
+    }
+
+    if (event.key === '-' || event.key === '=') {
+      if (clippingEnabled) {
+        if (event.key === '-') plane.constant -= step;
+        else if (event.key === '=') plane.constant += step;
+        updateClippingPlanes();
+      }
+    }
+    if (event.key === '9' || event.key === '0') {
+      if (verticalClippingEnabled) {
+        if (event.key === '9') verticalPlane.constant -= step;
+        else if (event.key === '0') verticalPlane.constant += step;
+        updateClippingPlanes();
       }
     }
   });

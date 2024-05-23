@@ -49,10 +49,26 @@ def write_pset_data():
                 st.table(value)
 
 
+def hotkey_instruction(hotkey, action):
+    return f"<b>{hotkey}</b>: {action}"
+
+
 def execute():
     with st.sidebar:
-        st.write("Воткнуть инструкцию для использования секущими плоскостями")
-        st.write('\n 9,0,-,= x c ')
+        with st.expander("Подсказка"):
+            st.subheader('Горячие клавиши секущих плоскостей')
+            hotkeys = {
+                "Ctrl + 1": "Вертикальная",
+                "Ctrl + 2": "Горизонтальная",
+                "9 и 0": "Управление верт.",
+                "- и =": "Управление гориз.",
+                "←": "Уменьшение скорости",
+                "→": "Увеличение скорости",
+            }
+            for hotkey, action in hotkeys.items():
+                st.markdown(hotkey_instruction(hotkey, action),
+                            unsafe_allow_html=True)
+
     if "ifc_file" in session and session["ifc_file"]:
         if "ifc_js_response" not in session:
             session["ifc_js_response"] = ""
