@@ -104,31 +104,35 @@ def plot_stat(dataframe):
 
 
 def display_data_table():
-    # st.header("Таблица данных")
     initialize_session_state()
     load_data()
     if st.session_state.IsDataFrameLoaded:
         dataframe = st.session_state["DataFrame"]
-        st.subheader("Общая таблица данных")
-        display_dataframe(dataframe)
-        st.download_button(
-            label="Скачать файл Excel",
-            data=download_excel(dataframe),
-            file_name='AllData.xlsx',
-            mime='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-        )
-        names_of_classes = dataframe['Class']
-        unique_names = names_of_classes.unique()
-        for name in unique_names:
-            st.subheader(f"Данные класса: {name}")
-            class_dataframe = dataframe[dataframe['Class'] == name]
-            display_dataframe(class_dataframe)
+        st.subheader("Данные")
+        tabs = st.tabs(["Общая таблица"] +
+                       [name for name in dataframe['Class'].unique()])
+
+        with tabs[0]:
+            st.subheader("Общая таблица данных")
+            display_dataframe(dataframe)
             st.download_button(
-                label=f"Скачать файл Excel класса {name}",
-                data=download_excel(class_dataframe),
-                file_name=f'{name}.xlsx',
+                label="Скачать файл Excel",
+                data=download_excel(dataframe),
+                file_name='AllData.xlsx',
                 mime='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
             )
+
+        for i, name in enumerate(dataframe['Class'].unique(), start=1):
+            with tabs[i]:
+                st.subheader(f"Данные класса: {name}")
+                class_dataframe = dataframe[dataframe['Class'] == name]
+                display_dataframe(class_dataframe)
+                st.download_button(
+                    label=f"Скачать файл Excel класса {name}",
+                    data=download_excel(class_dataframe),
+                    file_name=f'{name}.xlsx',
+                    mime='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+                )
     else:
         st.error("Загрузите модель для работы с данными")
 
@@ -151,7 +155,6 @@ def display_area_by_level():
 
 
 def display_statistics():
-    # st.header("Статистика")
     initialize_session_state()
     load_data()
     if st.session_state.IsDataFrameLoaded:
@@ -169,11 +172,11 @@ def display_statistics():
 def execute():
     st.sidebar.title("Навигация")
     app_mode = st.sidebar.radio(
-        "Выберите страницу", ["Таблица данных",
+        "Выберите страницу", ["Таблицы данных",
                               "Площадь по этажам",
                               "Статистика"])
 
-    if app_mode == "Таблица данных":
+    if app_mode == "Таблицы данных":
         display_data_table()
     elif app_mode == "Площадь по этажам":
         display_area_by_level()
