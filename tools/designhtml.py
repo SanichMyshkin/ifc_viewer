@@ -39,3 +39,7 @@ def get_footer():
         <p style="margin: 0;">ИЦТМС 4-2 Мышкин Александр</p>
     </footer>
     """
+
+
+def hotkey_description(hotkey, action):
+    return f"<b>{hotkey}</b>: {action}"

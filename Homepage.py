@@ -2,29 +2,31 @@ import streamlit as st
 from st_pages import Page, show_pages
 import ifcopenshell
 
-from tools.designhtml import get_browse_button, get_footer
+from tools.designHtml import get_browse_button, get_footer
 
 
-def set_page_configuration():
+def configure_page():
     show_pages([Page("Homepage.py", "Главная")])
     st.set_page_config(layout="wide")
 
 
-def callback_upload():
-    if "uploaded_file" in st.session_state and st.session_state["uploaded_file"] is not None:
-        st.session_state["file_name"] = st.session_state["uploaded_file"].name
+def handle_file_upload():
+    uploaded_file = st.session_state.get("uploaded_file")
+    if uploaded_file:
+        st.session_state["file_name"] = uploaded_file.name
         try:
-            st.session_state["array_buffer"] = st.session_state["uploaded_file"].getvalue(
-            )
-            decoded_content = st.session_state["array_buffer"].decode("utf-8")
+            array_buffer = uploaded_file.getvalue()
+            st.session_state["array_buffer"] = array_buffer
+            decoded_content = array_buffer.decode("utf-8")
 
             st.session_state["ifc_file"] = ifcopenshell.file.from_string(
                 decoded_content)
-
             st.session_state["is_file_loaded"] = True
-            st.session_state["DataFrame"] = None
-            st.session_state["Classes"] = []
-            st.session_state["IsDataFrameLoaded"] = False
+            st.session_state.update({
+                "DataFrame": None,
+                "Classes": [],
+                "IsDataFrameLoaded": False
+            })
             st.success("Файл обработан! Можете начинать работу :)")
         except UnicodeDecodeError:
             st.error("Не удалось декодировать файл. Проверьте кодировку.")
@@ -32,25 +34,25 @@ def callback_upload():
         st.error("Файл не загружен.")
 
 
-def design_main_page():
-    browse_button = get_browse_button()
-    footer_html = get_footer()
-    st.write(browse_button, unsafe_allow_html=True)
-    st.write(footer_html, unsafe_allow_html=True)
+def render_main_page():
+    st.write(get_browse_button(), unsafe_allow_html=True)
+    st.write(get_footer(), unsafe_allow_html=True)
 
 
 def main():
-    set_page_configuration()
+    configure_page()
     st.header('Web IFC-Viewer - приложение для визуализации и анализа ЦИМ')
-
-    design_main_page()
+    render_main_page()
 
     st.file_uploader(
-        label="Ненужный текст, что бы не ругалась консоль",
-        type=['ifc'], key="uploaded_file",
-        on_change=callback_upload, label_visibility='collapsed')
+        label="Загрузить файл",
+        type=['ifc'],
+        key="uploaded_file",
+        on_change=handle_file_upload,
+        label_visibility='collapsed'
+    )
 
-    if "is_file_loaded" in st.session_state and st.session_state["is_file_loaded"]:
+    if st.session_state.get("is_file_loaded"):
         show_pages(
             [
                 Page("Homepage.py", "Главная"),
@@ -61,5 +63,4 @@ def main():
 
 
 if __name__ == "__main__":
-
     main()
