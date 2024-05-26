@@ -78,11 +78,7 @@ def show_statistics():
             select_quantity()
             show_graph()
         with tabs[2]:
-            st.title('Анализ атрибутов IFC')
-
-            # Получаем все доступные классы из модели
             classes = session_state['data_frame']['Class'].unique()
-
             selected_class = st.selectbox('Выберите класс IFC:', classes)
             analyze_ifc_attributes(selected_class)
     else:
