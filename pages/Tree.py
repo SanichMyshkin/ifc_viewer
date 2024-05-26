@@ -1,6 +1,6 @@
 import streamlit as st
 from tools.ifcProperties import select_quantity, show_graph, \
-    plot_element_distribution
+    analyze_ifc_attributes
 from tools.ifcArea import get_area, sum_area
 from tools.ifcTableSet import load_data, show_dataframe, download_as_excel
 
@@ -69,15 +69,22 @@ def show_area_by_level():
 
 def show_statistics():
     if session_state.is_data_frame_loaded:
-        dataframe = session_state["data_frame"]
-        tabs = st.tabs(["Площадь", 'Статистика', 'График элементов'])
+        tabs = st.tabs(["Площадь",
+                        'Статистика',
+                        'График заполнености атрибутов'])
         with tabs[0]:
             show_area_by_level()
         with tabs[1]:
             select_quantity()
             show_graph()
         with tabs[2]:
-            plot_element_distribution(dataframe)
+            st.title('Анализ атрибутов IFC')
+
+            # Получаем все доступные классы из модели
+            classes = session_state['data_frame']['Class'].unique()
+
+            selected_class = st.selectbox('Выберите класс IFC:', classes)
+            analyze_ifc_attributes(selected_class)
     else:
         st.error("Загрузите модель для работы с данными")
 
