@@ -39,7 +39,7 @@ def select_quantity():
             st.warning(
                 "Выбранный набор свойств не содержит существующих столбцов!")
     else:
-        st.warning("В вашей модели отсутствуют свойства!")
+        st.warning('Схема не поддерживается. Для корректной работы рекомендуется использовать схемы IFC4')
 
 
 def show_attribute_stats(selected_class, show_percentage=False, include_empty=False):
@@ -105,7 +105,7 @@ def display_percentage_table(filled_percentage):
     st.table(percentage_df)
 
 
-def load_graph(include_empty):
+def load_graph():
     dataframe = cache["filtered_df"]
     quantity_set = cache["qset_selector"]
     quantity = cache["quantity_selector"]
@@ -128,16 +128,13 @@ def load_graph(include_empty):
         st.error(f"Колонка {column_name} отсутствует в данных.")
         return
 
-    if not include_empty:
-        dataframe = dataframe[dataframe[column_name] != 0]
-
     names_for_chart = 'Name_with_count' if user_option == "Name" else user_option
     figure_pie_chart = px.pie(
         dataframe, names=names_for_chart, values=column_name)
     st.plotly_chart(figure_pie_chart)
 
 
-def show_graph(include_empty=False):
+def show_graph():
     if cache.get("quantity_selector") == "Count":
         total = cache["filtered_df"].shape[0]
         df = pd.DataFrame(
@@ -145,5 +142,6 @@ def show_graph(include_empty=False):
         st.write("Данные в табличном виде:")
         st.dataframe(df)
     else:
-        st.subheader(f"{cache.class_selector} - {cache.quantity_selector}")
-        load_graph(include_empty)
+        if cache.quantity_selector:
+            st.subheader(f"{cache.class_selector} - {cache.quantity_selector}")
+            load_graph()

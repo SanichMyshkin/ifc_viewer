@@ -13,6 +13,7 @@ def initialize_session():
     cache["data_frame"] = None
     cache["Classes"] = []
     cache["is_data_frame_loaded"] = False
+    cache['quantity_selector'] = None
 
 
 def load_ifc_data():
@@ -68,31 +69,33 @@ def show_area_by_level():
         st.error("Загрузите модель для работы с данными")
 
 
+def analyz_atribute():
+    classes = cache['data_frame']['Class'].unique()
+    classes = np.insert(classes, 0, "Все классы")
+    selected_class = st.selectbox(
+        'Выберите класс IFC:', classes)
+    include_empty = st.checkbox(
+        'Включить полностью пустые элементы', key='attr_checkbox')
+    if selected_class == "Все классы":
+        show_attribute_stats(
+            'IfcRoot', show_percentage=True, include_empty=include_empty)
+    else:
+        show_attribute_stats(
+            selected_class, include_empty=include_empty)
+
+
 def show_statistics():
     if cache.is_data_frame_loaded:
         tabs = st.tabs(
-            ["Площадь", 'Статистика', 'График заполнености атрибутов'])
+            ['График заполнености атрибутов', 'Статистика', 'Площадь'])
 
         with tabs[0]:
-            show_area_by_level()
+            analyz_atribute()
         with tabs[1]:
-            include_empty = st.checkbox(
-                'Включить полностью пустые элементы', key='stat_checkbox')
             select_quantity()
-            show_graph(include_empty)
+            show_graph()
         with tabs[2]:
-            classes = cache['data_frame']['Class'].unique()
-            classes = np.insert(classes, 0, "Все классы")
-            selected_class = st.selectbox(
-                'Выберите класс IFC:', classes)
-            include_empty = st.checkbox(
-                'Включить полностью пустые элементы', key='attr_checkbox')
-            if selected_class == "Все классы":
-                show_attribute_stats(
-                    'IfcRoot', show_percentage=True, include_empty=include_empty)
-            else:
-                show_attribute_stats(
-                    selected_class, include_empty=include_empty)
+            show_area_by_level()
     else:
         st.error("Загрузите модель для работы с данными")
 

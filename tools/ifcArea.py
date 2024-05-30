@@ -6,9 +6,7 @@ def get_area(dataframe):
     slab_area_columns = [
         column for column in dataframe.columns if 'Slab' in column and 'Area' in column]
     if not slab_area_columns:
-        st.error(
-            "Данные о площади не доступны. Возможно, вы используете старую версию IFC")
-        st.warning('Для корректной работы рекомендуется использовать схемы IFC4')
+        st.warning('Схема не поддерживается. Для корректной работы рекомендуется использовать схемы IFC4')
         return None
     sum_by_level = dataframe.groupby('Level').agg(
         {column: lambda x: round(x.sum(), 3) for column in slab_area_columns}).reset_index()
