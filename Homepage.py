@@ -4,6 +4,8 @@ import ifcopenshell
 
 from tools.designHtml import get_browse_button, get_footer
 
+cache = st.session_state
+
 
 def configure_page():
     show_pages([Page("Homepage.py", "Главная")])
@@ -11,18 +13,18 @@ def configure_page():
 
 
 def handle_file_upload():
-    uploaded_file = st.session_state.get("uploaded_file")
+    uploaded_file = cache.get("uploaded_file")
     if uploaded_file:
-        st.session_state["file_name"] = uploaded_file.name
+        cache["file_name"] = uploaded_file.name
         try:
             array_buffer = uploaded_file.getvalue()
-            st.session_state["array_buffer"] = array_buffer
+            cache["array_buffer"] = array_buffer
             decoded_content = array_buffer.decode("utf-8")
 
-            st.session_state["ifc_file"] = ifcopenshell.file.from_string(
+            cache["ifc_file"] = ifcopenshell.file.from_string(
                 decoded_content)
-            st.session_state["is_file_loaded"] = True
-            st.session_state.update({
+            cache["is_file_loaded"] = True
+            cache.update({
                 "DataFrame": None,
                 "Classes": [],
                 "IsDataFrameLoaded": False
@@ -52,7 +54,7 @@ def main():
         label_visibility='collapsed'
     )
 
-    if st.session_state.get("is_file_loaded"):
+    if cache.get("is_file_loaded"):
         show_pages(
             [
                 Page("Homepage.py", "Главная"),

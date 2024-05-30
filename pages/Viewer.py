@@ -7,6 +7,8 @@ import urllib.parse
 from tools.ifcData import fetch_ifc_element_data
 from tools.designHtml import hotkey_description
 
+cache = st.session_state
+
 
 models_dir = (Path(__file__).parent / "models").absolute()
 ifc_js_component = components.declare_component(
@@ -18,16 +20,16 @@ def render_ifc_js_viewer(url=None):
 
 
 def display_3d_viewer():
-    session.ifc_js_response = render_ifc_js_viewer(get_current_ifc_file())
+    cache.ifc_js_response = render_ifc_js_viewer(get_current_ifc_file())
 
 
 def get_current_ifc_file():
-    return session.array_buffer
+    return cache.array_buffer
 
 
 def fetch_psets_from_ifc_js():
-    if session.ifc_js_response:
-        decoded_response = urllib.parse.unquote(session.ifc_js_response)
+    if cache.ifc_js_response:
+        decoded_response = urllib.parse.unquote(cache.ifc_js_response)
         return json.loads(decoded_response)
 
 
@@ -64,9 +66,9 @@ def main():
                 st.markdown(hotkey_description(hotkey, action),
                             unsafe_allow_html=True)
 
-    if "ifc_file" in session and session.ifc_file:
-        session.setdefault("ifc_js_response", "")
-        project_name = session.ifc_file.by_type('IfcProject')[0][5]
+    if "ifc_file" in cache and cache.ifc_file:
+        cache.setdefault("ifc_js_response", "")
+        project_name = cache.ifc_file.by_type('IfcProject')[0][5]
         st.subheader(project_name)
         display_3d_viewer()
         with st.columns(2)[0]:
@@ -75,5 +77,5 @@ def main():
         st.error("Для начала загрузите саму модель на главной странице")
 
 
-session = st.session_state
+
 main()

@@ -3,11 +3,13 @@ from tools.ifcData import fetch_elements_by_class, create_dataframe
 from io import BytesIO
 import pandas as pd
 
+cache = st.session_state
+
 
 def load_data():
     try:
         data, pset_attributes = fetch_elements_by_class(
-            st.session_state.ifc_file, "IfcBuildingElement")
+            cache.ifc_file, "IfcBuildingElement")
         dataframe = create_dataframe(data, pset_attributes)
         classes = dataframe['Class'].value_counts().keys().tolist()
         return dataframe, classes

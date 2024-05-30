@@ -6,26 +6,26 @@ from tools.ifcArea import get_area, sum_area
 from tools.ifcTableSet import load_data, show_dataframe, download_as_excel
 
 
-session_state = st.session_state
+cache = st.session_state
 
 
 def initialize_session():
-    session_state["data_frame"] = None
-    session_state["Classes"] = []
-    session_state["is_data_frame_loaded"] = False
+    cache["data_frame"] = None
+    cache["Classes"] = []
+    cache["is_data_frame_loaded"] = False
 
 
 def load_ifc_data():
-    if "ifc_file" in session_state:
+    if "ifc_file" in cache:
         dataframe, classes = load_data()
-        session_state["data_frame"] = dataframe
-        session_state["Classes"] = classes
-        session_state["is_data_frame_loaded"] = True
+        cache["data_frame"] = dataframe
+        cache["Classes"] = classes
+        cache["is_data_frame_loaded"] = True
 
 
 def show_data_table():
-    if session_state.is_data_frame_loaded:
-        dataframe = session_state["data_frame"]
+    if cache.is_data_frame_loaded:
+        dataframe = cache["data_frame"]
         st.subheader("Данные")
         tabs = st.tabs(["Общая таблица"] + list(dataframe['Class'].unique()))
 
@@ -55,8 +55,8 @@ def show_data_table():
 
 
 def show_area_by_level():
-    if session_state.is_data_frame_loaded:
-        dataframe = session_state["data_frame"]
+    if cache.is_data_frame_loaded:
+        dataframe = cache["data_frame"]
         area_dataframe = get_area(dataframe)
         total_area = sum_area(area_dataframe)
         if area_dataframe is not None:
@@ -69,21 +69,30 @@ def show_area_by_level():
 
 
 def show_statistics():
-    if session_state.is_data_frame_loaded:
-        tabs = st.tabs(["Площадь", 'Статистика', 'График заполнености атрибутов'])
+    if cache.is_data_frame_loaded:
+        tabs = st.tabs(
+            ["Площадь", 'Статистика', 'График заполнености атрибутов'])
 
         with tabs[0]:
             show_area_by_level()
         with tabs[1]:
+            include_empty = st.checkbox(
+                'Включить полностью пустые элементы', key='stat_checkbox')
             select_quantity()
-            show_graph()
+            show_graph(include_empty)
         with tabs[2]:
-            classes = session_state['data_frame']['Class'].unique()
-            selected_class = st.selectbox('Выберите класс IFC:', np.append(classes, "Все классы"))
+            classes = cache['data_frame']['Class'].unique()
+            classes = np.insert(classes, 0, "Все классы")
+            selected_class = st.selectbox(
+                'Выберите класс IFC:', classes)
+            include_empty = st.checkbox(
+                'Включить полностью пустые элементы', key='attr_checkbox')
             if selected_class == "Все классы":
-                show_attribute_stats('IfcRoot', show_percentage=True)
+                show_attribute_stats(
+                    'IfcRoot', show_percentage=True, include_empty=include_empty)
             else:
-                show_attribute_stats(selected_class)
+                show_attribute_stats(
+                    selected_class, include_empty=include_empty)
     else:
         st.error("Загрузите модель для работы с данными")
 

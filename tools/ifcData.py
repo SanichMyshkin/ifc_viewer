@@ -2,6 +2,8 @@ import ifcopenshell.util.element as Element
 import pandas as pd
 import streamlit as st
 
+cache = st.session_state
+
 
 def fetch_elements_by_class(ifc_file, class_type):
     def collect_pset_attributes(psets, attribute_set):
@@ -67,7 +69,7 @@ def create_dataframe(element_data_list, pset_attributes):
 def fetch_ifc_element_data(ifc_element_id):
     element_id = ifc_element_id['id']
     if element_id:
-        ifc_file = st.session_state.ifc_file
+        ifc_file = cache.ifc_file
         element = ifc_file.by_id(element_id)
         quantity_sets = Element.get_psets(element, qtos_only=True)
         property_sets = Element.get_psets(element, psets_only=True)
