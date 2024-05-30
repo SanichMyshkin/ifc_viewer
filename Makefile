@@ -6,3 +6,7 @@ start:
 
 install:
 	poetry install --no-root
+
+envdel:
+	poetry env list
+	poetry env remove --all
