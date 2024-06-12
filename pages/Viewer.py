@@ -5,7 +5,9 @@ import streamlit.components.v1 as components
 import urllib.parse
 
 from tools.ifcData import fetch_ifc_element_data
-from tools.designHtml import hotkey_description
+
+def hotkey_description(hotkey, action):
+    return f"<b>{hotkey}</b>: {action}"
 
 cache = st.session_state
 

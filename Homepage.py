@@ -46,8 +46,7 @@ def get_footer():
     """
 
 
-def hotkey_description(hotkey, action):
-    return f"<b>{hotkey}</b>: {action}"
+
 
 
 cache = st.session_state
