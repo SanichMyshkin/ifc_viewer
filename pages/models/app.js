@@ -1,7 +1,28 @@
 import { IFCLoader } from "./components/IFCLoader.js";
-import { AmbientLight, AxesHelper, DirectionalLight, GridHelper, PerspectiveCamera, Scene, Raycaster, Vector2, WebGLRenderer, MeshBasicMaterial, Plane, PlaneHelper, Vector3, DoubleSide, Mesh, PlaneGeometry } from "./components/three.module.js";
+import {
+  AmbientLight,
+  AxesHelper,
+  DirectionalLight,
+  GridHelper,
+  PerspectiveCamera,
+  Scene,
+  Raycaster,
+  Vector2,
+  WebGLRenderer,
+  MeshBasicMaterial,
+  Plane,
+  PlaneHelper,
+  Vector3,
+  DoubleSide,
+  Mesh,
+  PlaneGeometry
+} from "./components/three.module.js";
 import { OrbitControls } from "./components/OrbitControls.js";
-import { acceleratedRaycast, computeBoundsTree, disposeBoundsTree } from './components/three-mesh-bvh/three-mesh-bvh.js';
+import {
+  acceleratedRaycast,
+  computeBoundsTree,
+  disposeBoundsTree
+} from './components/three-mesh-bvh/three-mesh-bvh.js';
 
 const ifcModels = [];
 const ifcLoader = new IFCLoader();
@@ -13,20 +34,20 @@ const sendValue = value => Streamlit.setComponentValue(value);
 const scene = new Scene();
 
 let clippingEnabled = false;
-const gap = 0.01; // Зазор между плоскостями
+const gap = 0.01;
 
 const plane = new Plane(new Vector3(0, -1, 0), gap);
 const planeHelper = new PlaneHelper(plane, 10);
-planeHelper.visible = false; // Hide clipping plane by default
+planeHelper.visible = false;
 
 let verticalClippingEnabled = false;
 const verticalPlane = new Plane(new Vector3(1, 0, 0), gap);
 const verticalPlaneHelper = new PlaneHelper(verticalPlane, 10);
-verticalPlaneHelper.visible = false; // Hide vertical clipping plane by default
+verticalPlaneHelper.visible = false;
 
-const largePlaneSize = 100; // Определение размера для сеток
+const largePlaneSize = 100;
 
-// Create grid helpers for clipping planes
+
 const horizontalGrid = new GridHelper(largePlaneSize, 100, 0xff0000, 0xff0000);
 horizontalGrid.rotation.x = Math.PI;
 horizontalGrid.visible = false;
@@ -126,13 +147,13 @@ const setup = () => {
       ...(verticalClippingEnabled ? [verticalPlane] : [])
     ];
 
-    // Update horizontal clipping grid
+
     horizontalGrid.visible = clippingEnabled;
     if (clippingEnabled) {
       horizontalGrid.position.copy(plane.normal).multiplyScalar(-plane.constant + gap); // -plane.constant исправляет, но появляеться мерцание
     }
 
-    // Update vertical clipping grid
+
     verticalGrid.visible = verticalClippingEnabled;
     if (verticalClippingEnabled) {
       verticalGrid.position.copy(verticalPlane.normal).multiplyScalar(-verticalPlane.constant + gap); // -verticalPlane.constant исправляет, но появляеться мерцание
@@ -140,10 +161,9 @@ const setup = () => {
 
   };
 
-  let step = 0.3; // скорость изменения движения секущей плоскости (по хорошему нужно вывести это через Streamlit сбоку)
+  let step = 0.3;
 
   window.addEventListener('keydown', (event) => {
-    // Включение/выключение горизонтальной плоскости с помощью Ctrl + 1
     if (event.ctrlKey && event.key === '2') {
       clippingEnabled = !clippingEnabled;
       planeHelper.visible = clippingEnabled;
@@ -153,7 +173,7 @@ const setup = () => {
       }
     }
 
-    // Включение/выключение вертикальной плоскости с помощью Ctrl + 2
+
     if (event.ctrlKey && event.key === '1') {
       verticalClippingEnabled = !verticalClippingEnabled;
       verticalPlaneHelper.visible = verticalClippingEnabled;
@@ -163,11 +183,10 @@ const setup = () => {
       }
     }
 
-    // Изменение скорости с помощью стрелок влево и вправо
     if (event.key === 'ArrowLeft') {
-      step = Math.max(0.1, step - 0.5); // Уменьшение скорости при нажатии стрелки влево
+      step = Math.max(0.1, step - 0.5);
     } else if (event.key === 'ArrowRight') {
-      step += 0.5; // Увеличение скорости при нажатии стрелки вправо
+      step += 0.5;
     }
 
     if (event.key === '-' || event.key === '=') {

@@ -17,31 +17,6 @@ def extract_quantities(df, qset):
     return [col.split(".", 1)[1] for col in df.columns if qset in col] + ["Count"]
 
 
-def select_quantity():
-    class_selector = st.selectbox(
-        "Выберите класс", cache["Classes"], key="class_selector")
-    cache["filtered_df"] = filter_df_by_class(
-        cache["data_frame"], class_selector)
-    qset_columns = extract_qset_columns(cache["filtered_df"])
-
-    if qset_columns:
-        qset_selector = st.selectbox(
-            "Выберите набор свойств", qset_columns, key='qset_selector')
-        quantities = extract_quantities(cache["filtered_df"], qset_selector)
-        existing_quantities = [q for q in quantities if q ==
-                               "Count" or f"{qset_selector}.{q}" in cache["filtered_df"].columns]
-
-        if existing_quantities:
-            st.selectbox("Выберите свойство", existing_quantities,
-                         key="quantity_selector")
-            st.radio('Сортировать по:', ['Level', 'Name'], key="sort_options")
-        else:
-            st.warning(
-                "Выбранный набор свойств не содержит существующих столбцов!")
-    else:
-        st.warning('Схема не поддерживается. Для корректной работы рекомендуется использовать схемы IFC4')
-
-
 def show_attribute_stats(selected_class, show_percentage=False, include_empty=False):
     ifc_model = cache.get("ifc_file")
     if not ifc_model or not selected_class:
@@ -142,6 +117,31 @@ def show_graph():
         st.write("Данные в табличном виде:")
         st.dataframe(df)
     else:
-        if cache.quantity_selector:
-            st.subheader(f"{cache.class_selector} - {cache.quantity_selector}")
-            load_graph()
+        st.subheader(f"{cache.class_selector} - {cache.quantity_selector}")
+        load_graph()
+
+
+def select_quantity():
+    class_selector = st.selectbox(
+        "Выберите класс", cache["Classes"], key="class_selector")
+    cache["filtered_df"] = filter_df_by_class(
+        cache["data_frame"], class_selector)
+    qset_columns = extract_qset_columns(cache["filtered_df"])
+
+    if qset_columns:
+        qset_selector = st.selectbox(
+            "Выберите набор свойств", qset_columns, key='qset_selector')
+        quantities = extract_quantities(cache["filtered_df"], qset_selector)
+        existing_quantities = [q for q in quantities if q ==
+                               "Count" or f"{qset_selector}.{q}" in cache["filtered_df"].columns]
+
+        if existing_quantities:
+            st.selectbox("Выберите свойство", existing_quantities,
+                         key="quantity_selector")
+            st.radio('Сортировать по:', ['Level', 'Name'], key="sort_options")
+        else:
+            st.warning(
+                "Выбранный набор свойств не содержит существующих столбцов!")
+    else:
+        st.warning(
+            'Схема не поддерживается. Для корректной работы рекомендуется использовать схемы IFC4')

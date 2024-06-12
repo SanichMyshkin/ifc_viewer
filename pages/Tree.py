@@ -13,7 +13,6 @@ def initialize_session():
     cache["data_frame"] = None
     cache["Classes"] = []
     cache["is_data_frame_loaded"] = False
-    cache['quantity_selector'] = None
 
 
 def load_ifc_data():
@@ -87,7 +86,7 @@ def analyz_atribute():
 def show_statistics():
     if cache.is_data_frame_loaded:
         tabs = st.tabs(
-            ['График заполнености атрибутов', 'Статистика', 'Площадь'])
+            ['Полнота атрибутов', 'Фильтрация данных', 'Площадь'])
 
         with tabs[0]:
             analyz_atribute()

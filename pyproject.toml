@@ -24,6 +24,9 @@ folium = "^0.16.0"
 trimesh = "^4.4.0"
 
 
+[tool.poetry.group.dev.dependencies]
+ipykernel = "^6.29.4"
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
