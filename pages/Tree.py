@@ -86,7 +86,7 @@ def analyz_atribute():
 def show_statistics():
     if cache.is_data_frame_loaded:
         tabs = st.tabs(
-            ['Полнота атрибутов', 'Фильтрация данных', 'Площадь'])
+            ['Заполненость атрибутов', 'Фильтрация данных', 'Площадь'])
 
         with tabs[0]:
             analyz_atribute()
